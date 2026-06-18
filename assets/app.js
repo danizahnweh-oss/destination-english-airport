@@ -160,13 +160,14 @@ window.App = (function () {
     ];
     return (
       '<div class="nav-inner">' +
-        '<a class="brand" href="index.html"><span class="logo">✈</span><span>Destination&nbsp;English</span></a>' +
-        '<nav class="nav-links">' +
-          links.map((l) => '<a href="' + l[0] + '" class="' + (l[2] === page ? "active" : "") + '">' + l[1] + "</a>").join("") +
+        '<a class="brand" href="index.html"><span class="logo" aria-hidden="true">✈</span><span>Destination&nbsp;English</span></a>' +
+        '<nav class="nav-links" aria-label="Sections">' +
+          links.map((l) => '<a href="' + l[0] + '" class="' + (l[2] === page ? "active" : "") + '"' + (l[2] === page ? ' aria-current="page"' : "") + ">" + l[1] + "</a>").join("") +
         "</nav>" +
         '<button class="group-pill" id="groupPill" type="button">' +
-          '<span class="sync-dot"></span><span class="gname">No group</span>' +
+          '<span class="sync-dot" aria-hidden="true"></span><span class="gname">No group</span>' +
           '<span class="switch">Switch</span>' +
+          '<span class="sr-only" id="syncStatus" aria-live="polite"></span>' +
         "</button>" +
       "</div>"
     );
@@ -176,13 +177,20 @@ window.App = (function () {
     const pill = document.getElementById("groupPill");
     if (!pill) return;
     pill.querySelector(".gname").textContent = group ? group.name : "Choose group";
-    if (!group) { pill.classList.remove("online", "offline"); }
+    const status = pill.querySelector("#syncStatus");
+    if (!group) {
+      pill.classList.remove("online", "offline");
+      if (status) status.textContent = "No group selected";
+    }
   }
   function setOnline(ok) {
     const pill = document.getElementById("groupPill");
     if (!pill || !group) return;
-    pill.classList.toggle("online", !!ok && cloud);
+    const live = !!ok && cloud;
+    pill.classList.toggle("online", live);
     pill.classList.toggle("offline", !ok || !cloud);
+    const status = pill.querySelector("#syncStatus");
+    if (status) status.textContent = live ? "Live sync on" : "Sync offline, saved on this device";
   }
 
   function modalHTML() {
@@ -190,16 +198,16 @@ window.App = (function () {
       '<div class="modal-back" id="grpBack"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="grpTitle">' +
         '<h2 id="grpTitle">Your group</h2>' +
         '<p class="sub">One group, many iPads. Share your group code so your team-mates join the same group.</p>' +
-        '<div class="tabs">' +
-          '<button data-tab="mine" class="active">My groups</button>' +
-          '<button data-tab="new">New</button>' +
-          '<button data-tab="join">Join</button>' +
+        '<div class="tabs" role="tablist" aria-label="Group options">' +
+          '<button type="button" role="tab" aria-selected="true" data-tab="mine" class="active">My groups</button>' +
+          '<button type="button" role="tab" aria-selected="false" data-tab="new">New</button>' +
+          '<button type="button" role="tab" aria-selected="false" data-tab="join">Join</button>' +
         "</div>" +
 
-        '<div class="pane active" data-pane="mine"><div class="group-list" id="grpList"></div>' +
+        '<div class="pane active" role="tabpanel" data-pane="mine"><div class="group-list" id="grpList"></div>' +
           '<p class="muted">Tip: pick a group to keep working, or create / join one.</p></div>' +
 
-        '<div class="pane" data-pane="new">' +
+        '<div class="pane" role="tabpanel" data-pane="new">' +
           '<div class="field"><label>Group name</label><input id="newName" placeholder="The Jet Setters" autocomplete="off"></div>' +
           '<button class="btn btn-primary btn-block" id="newBtn">Create group</button>' +
           '<div id="newResult" style="display:none">' +
@@ -210,7 +218,7 @@ window.App = (function () {
           "</div>" +
         "</div>" +
 
-        '<div class="pane" data-pane="join">' +
+        '<div class="pane" role="tabpanel" data-pane="join">' +
           '<div class="field"><label>Group code</label><input id="joinCode" placeholder="MUC-7Q2X" autocomplete="off" style="text-transform:uppercase"></div>' +
           '<div class="err" id="joinErr"></div>' +
           '<button class="btn btn-primary btn-block" id="joinBtn">Join group</button>' +
@@ -238,24 +246,28 @@ window.App = (function () {
     const host = document.getElementById("grpList");
     const list = knownGroups();
     if (!list.length) { host.innerHTML = '<p class="muted">No groups on this device yet.</p>'; return; }
-    host.innerHTML = list.map((g) =>
-      '<div class="gl ' + (group && g.id === group.id ? "active" : "") + '" data-id="' + g.id + '">' +
-        '<div><div class="gl-name">' + escapeHTML(g.name) + "</div></div>" +
-        '<span class="gl-code">' + g.id + "</span>" +
-        '<span class="switch" data-del="' + g.id + '" title="Remove from this device">✕</span>' +
-      "</div>"
-    ).join("");
-    host.querySelectorAll(".gl").forEach((row) => {
-      row.addEventListener("click", (e) => {
-        if (e.target.hasAttribute("data-del")) { forgetGroup(e.target.getAttribute("data-del")); renderGroupList(); return; }
-        joinGroup(row.getAttribute("data-id")).then(() => closeModal());
-      });
+    host.innerHTML = list.map((g) => {
+      const isActive = group && g.id === group.id;
+      return '<div class="gl-row">' +
+        '<button type="button" class="gl ' + (isActive ? "active" : "") + '" data-id="' + g.id + '"' +
+          (isActive ? ' aria-current="true"' : "") + ">" +
+          '<span class="gl-name">' + escapeHTML(g.name) + "</span>" +
+          '<span class="gl-code">' + g.id + "</span>" +
+        "</button>" +
+        '<button type="button" class="gl-del" data-del="' + g.id + '" title="Remove from this device" aria-label="Remove ' + escapeHTML(g.name) + ' from this device">✕</button>' +
+      "</div>";
+    }).join("");
+    host.querySelectorAll(".gl").forEach((btn) => {
+      btn.addEventListener("click", () => joinGroup(btn.getAttribute("data-id")).then(() => closeModal()));
+    });
+    host.querySelectorAll(".gl-del").forEach((btn) => {
+      btn.addEventListener("click", () => { forgetGroup(btn.getAttribute("data-del")); renderGroupList(); });
     });
   }
 
   function wireModal() {
     document.body.insertAdjacentHTML("beforeend", modalHTML());
-    document.body.insertAdjacentHTML("beforeend", '<div class="toast" id="toast"><span class="t-ic">✈</span><span id="toastMsg"></span></div>');
+    document.body.insertAdjacentHTML("beforeend", '<div class="toast" id="toast" role="status" aria-live="polite"><span class="t-ic" aria-hidden="true">✈</span><span id="toastMsg"></span></div>');
 
     const back = document.getElementById("grpBack");
     back.addEventListener("click", (e) => { if (e.target === back) closeModal(); });
@@ -264,9 +276,10 @@ window.App = (function () {
     });
     back.querySelectorAll(".tabs button").forEach((b) =>
       b.addEventListener("click", () => {
-        back.querySelectorAll(".tabs button").forEach((x) => x.classList.remove("active"));
+        back.querySelectorAll(".tabs button").forEach((x) => { x.classList.remove("active"); x.setAttribute("aria-selected", "false"); });
         back.querySelectorAll(".pane").forEach((x) => x.classList.remove("active"));
         b.classList.add("active");
+        b.setAttribute("aria-selected", "true");
         back.querySelector('[data-pane="' + b.getAttribute("data-tab") + '"]').classList.add("active");
       })
     );
@@ -331,8 +344,9 @@ window.App = (function () {
       ).join("");
       document.body.insertBefore(sky, document.body.firstChild);
     }
-    // planes flying across each departures-board hero
+    // planes flying across each departures-board hero + real airplane photo behind it
     document.querySelectorAll(".board").forEach((b) => {
+      b.classList.add("has-photo");
       if (b.querySelector(".sky-plane")) return;
       [{ y: "16%", dur: 15, delay: 0, sz: 26 },
        { y: "62%", dur: 22, delay: 7, sz: 20 },
