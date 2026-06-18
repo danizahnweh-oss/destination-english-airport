@@ -603,14 +603,14 @@ footer.foot::before {
 .board-paths { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .board-paths svg { width: 100%; height: 100%; display: block; }
 .board-paths path {
-  fill: none; stroke: var(--amber);
-  stroke-dasharray: 0.35 0.65;
+  fill: none; stroke: oklch(0.86 0.15 82);
+  stroke-dasharray: 0.5 0.5;
   animation: pathFlow var(--dur, 24s) linear infinite;
 }
 @keyframes pathFlow {
-  0%   { stroke-dashoffset: 1;  opacity: .10; }
-  50%  {                        opacity: .38; }
-  100% { stroke-dashoffset: -1; opacity: .10; }
+  0%   { stroke-dashoffset: 1;  opacity: .22; }
+  50%  {                        opacity: .6;  }
+  100% { stroke-dashoffset: -1; opacity: .22; }
 }
 /* keep hero content above the drifting paths */
 .board .eyebrow, .board h1, .board p.lead, .board .meta-row { position: relative; z-index: 1; }
@@ -714,7 +714,9 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
   .reveal, .departures .dep { opacity: 1 !important; transform: none !important; }
-  .sky, .board .sky-plane, .board-paths { display: none !important; }
+  .sky, .board .sky-plane { display: none !important; }
+  /* keep the flight paths visible, just frozen, when motion is reduced */
+  .board-paths path { animation: none !important; opacity: .3 !important; }
 }
 
 /* ---------- Print / PDF ---------- */
