@@ -16,7 +16,7 @@
   <section class="board" style="border-radius:20px">
     <span class="eyebrow">Our world map</span>
     <h1 style="font-size:clamp(26px,5vw,38px)">Where do they come from?</h1>
-    <p class="lead">Drop a pin on the real world map for every country you meet. Each pin shows up live on your whole team's iPads.</p>
+    <p class="lead">Drop a pin for every country a traveller you interviewed comes from. Each pin shows up live on your whole team's iPads.</p>
   </section>
 
   <div style="height:18px"></div>
@@ -29,8 +29,8 @@
   </section>
 
   <section class="card">
-    <div class="sec-head"><div class="num">📍</div><h2>Pin a country</h2></div>
-    <p class="map-hint">✦ Tap a country on the map to drop a pin, then give it a name below.</p>
+    <div class="sec-head"><div class="num">📍</div><h2>Pin a traveller's country</h2></div>
+    <p class="map-hint">✦ Tap the country your interviewed traveller comes from to drop a pin, then name it below.</p>
 
     <div class="placebar" id="placebar">
       <span id="placebarText">Now tap the map to place it</span>
@@ -121,7 +121,7 @@
     document.getElementById("countN").textContent = keys.length;
     const host = document.getElementById("countryList");
     if (!keys.length){
-      host.innerHTML = '<div class="empty"><div class="e-ico">🗺️</div><p>No countries yet. Tap the map above to drop your first pin.</p></div>';
+      host.innerHTML = '<div class="empty"><div class="e-ico">🗺️</div><p>No countries yet. Interview a traveller, then tap their home country on the map above.</p></div>';
       return;
     }
     host.innerHTML = '<div class="countries">' + keys.map(function (k){
