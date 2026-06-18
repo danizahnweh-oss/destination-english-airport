@@ -46,9 +46,9 @@ window.DATA = {
       task: "Stand in front of a departures board. Munich's code is MUC. Find three other three-letter airport codes and match each one to the correct city and country.",
       proof: "Proof: 3 codes + cities + countries.",
       fields: [
-        { key: "m2_a", label: "Code 1 → city, country", placeholder: "LHR → London, UK" },
-        { key: "m2_b", label: "Code 2 → city, country", placeholder: "JFK → New York, USA" },
-        { key: "m2_c", label: "Code 3 → city, country", placeholder: "CDG → Paris, France" }
+        { key: "m2_a", label: "Code 1 → city, country", placeholder: "___ → city, country" },
+        { key: "m2_b", label: "Code 2 → city, country", placeholder: "___ → city, country" },
+        { key: "m2_c", label: "Code 3 → city, country", placeholder: "___ → city, country" }
       ]},
     { n: 3, points: 10, title: "Flight to an English-speaking country",
       task: "Find a flight from Munich to an English-speaking country (UK, USA, Ireland, Canada, Australia, New Zealand). Note the city, flight number, airline and departure time. How many hours from now does it leave?",
@@ -69,17 +69,17 @@ window.DATA = {
       task: "Find five signs with an imperative instruction (e.g. KEEP LEFT, DO NOT ENTER, MIND THE STEP). Write the full instruction each time, not just one word.",
       proof: "Proof: 5 full instructions.",
       fields: [
-        { key: "m5_1", label: "Sign 1", placeholder: "KEEP LEFT" },
-        { key: "m5_2", label: "Sign 2", placeholder: "DO NOT ENTER" },
-        { key: "m5_3", label: "Sign 3", placeholder: "MIND THE STEP" },
-        { key: "m5_4", label: "Sign 4", placeholder: "PLEASE QUEUE HERE" },
-        { key: "m5_5", label: "Sign 5", placeholder: "FASTEN YOUR SEATBELT" }
+        { key: "m5_1", label: "Sign 1", placeholder: "A full instruction you saw" },
+        { key: "m5_2", label: "Sign 2", placeholder: "A full instruction you saw" },
+        { key: "m5_3", label: "Sign 3", placeholder: "A full instruction you saw" },
+        { key: "m5_4", label: "Sign 4", placeholder: "A full instruction you saw" },
+        { key: "m5_5", label: "Sign 5", placeholder: "A full instruction you saw" }
       ]},
     { n: 6, points: 10, title: "Ask for directions",
       task: "Ask a member of staff in English how to get from Terminal 1 to Terminal 2 (or to the SkyLine train). Write down their directions in two or three full sentences.",
       proof: "Proof: the directions in your own words.",
       fields: [
-        { key: "m6_dir", label: "The directions", placeholder: "Go straight ahead, then take the SkyLine …", big: true }
+        { key: "m6_dir", label: "The directions", placeholder: "First you …, then you …, and finally …", big: true }
       ]},
     { n: 7, points: 10, title: "MAC & the Airbräu",
       task: "Go to the Munich Airport Center (MAC) or find the Airbräu, the airport's own brewery. Find an advert or poster in English nearby, say what it is selling and write one sentence why a traveller might buy it.",
