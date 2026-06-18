@@ -38,7 +38,18 @@ create policy "anon update entries"
   using (true) with check (true);
 
 -- 3) Broadcast row changes over Realtime so all devices update live.
-alter publication supabase_realtime add table public.entries;
+--    (Safe to re-run: only adds the table if it isn't already published.)
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'entries'
+  ) then
+    alter publication supabase_realtime add table public.entries;
+  end if;
+end $$;
 
 -- Done. Now copy your Project URL + anon key into assets/config.js
 -- ============================================================
