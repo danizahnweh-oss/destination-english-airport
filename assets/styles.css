@@ -348,48 +348,49 @@ select { -webkit-appearance: none; appearance: none; background-image: url("data
 .empty { text-align: center; color: var(--muted); padding: 30px 10px; }
 .empty .e-ico { font-size: 40px; opacity: .5; }
 
-/* ---------- Interactive world map (tap to pin) ---------- */
+/* ---------- Interactive world map (MapLibre · tap to pin) ---------- */
 .worldmap {
-  position: relative; width: 100%; border-radius: var(--radius-sm);
+  position: relative; width: 100%; height: clamp(380px, 62vh, 580px);
+  border-radius: var(--radius-sm);
   overflow: hidden; background: #eaf1fb;
   box-shadow: inset 0 0 0 1px var(--line);
-  touch-action: manipulation; cursor: crosshair; -webkit-tap-highlight-color: transparent;
+  touch-action: pan-x pan-y; -webkit-tap-highlight-color: transparent;
 }
 .worldmap.placing { outline: 3px solid var(--amber); outline-offset: -3px; }
-.wm-img { display: block; width: 100%; height: auto; pointer-events: none; user-select: none; -webkit-user-drag: none; }
-.wm-pins { position: absolute; inset: 0; pointer-events: none; }   /* pins re-enable it themselves */
+.worldmap .maplibregl-canvas { outline: none; }
 
-.wm-pin {
-  position: absolute; transform: translate(-50%, -100%); transform-origin: bottom center;
+/* flag pin marker (MapLibre controls the root element's position transform,
+   so all visual transforms live on the inner .head) */
+.wm-marker {
   pointer-events: auto; cursor: pointer; border: none; background: none; padding: 0;
-  transition: transform .12s var(--ease); animation: pin-drop .42s var(--ease) both;
+  line-height: 0;
 }
-.wm-pin .head {
+.wm-marker .head {
   width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
   font-size: 15px; background: var(--brand); border: 2px solid #fff;
   box-shadow: 0 3px 7px oklch(0.30 0.08 262 / 0.45);
+  transition: transform .12s var(--ease);
+  animation: pin-drop .42s var(--ease) both;
 }
-.wm-pin::after {                       /* the little pointer that touches the spot */
-  content: ""; position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%);
-  border: 5px solid transparent; border-top-color: #fff;
+.wm-marker.ghost .head { background: var(--amber); opacity: .9; }
+.wm-marker:hover .head, .wm-marker:focus-visible .head { transform: scale(1.14); }
+.wm-marker:focus-visible { outline: none; }
+.wm-marker:focus-visible .head { box-shadow: 0 0 0 3px var(--brand), 0 3px 7px oklch(0.30 0.08 262 / 0.45); }
+.wm-marker.sel .head {
+  transform: scale(1.18); background: var(--brand-dark);
+  box-shadow: 0 0 0 3px oklch(0.55 0.17 256 / 0.3), 0 3px 7px oklch(0.30 0.08 262 / 0.5);
 }
-.wm-pin.ghost .head { background: var(--amber); opacity: .9; }
-.wm-pin:hover, .wm-pin:focus-visible { transform: translate(-50%, -100%) scale(1.14); z-index: 5; outline: none; }
-.wm-pin.sel { transform: translate(-50%, -100%) scale(1.18); z-index: 6; }
-.wm-pin.sel .head { background: var(--brand-dark); box-shadow: 0 0 0 3px oklch(0.55 0.17 256 / 0.3), 0 3px 7px oklch(0.30 0.08 262 / 0.5); }
-@keyframes pin-drop { from { opacity: 0; transform: translate(-50%, -160%) scale(.7); } to { opacity: 1; transform: translate(-50%, -100%) scale(1); } }
+@keyframes pin-drop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
 
-/* popover anchored to a selected pin */
-.pin-pop {
-  position: absolute; transform: translate(-50%, -100%); z-index: 20;
+/* selected-pin popover, themed onto the MapLibre popup */
+.wm-popup .maplibregl-popup-content {
   background: var(--board); color: #fff; border-radius: 10px; padding: 9px 11px;
-  box-shadow: var(--shadow-lg); min-width: 130px; max-width: 200px; margin-top: -36px;
-  pointer-events: auto;
+  box-shadow: var(--shadow-lg); min-width: 130px; max-width: 200px;
 }
-.pin-pop .pp-name { font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 6px; }
-.pin-pop .pp-who { font-size: 12px; color: oklch(0.82 0.03 262); margin-top: 1px; }
-.pin-pop button { margin-top: 8px; min-height: 32px; font-size: 12.5px; padding: 0 12px; border-radius: 8px; }
-.pin-pop::after { content: ""; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--board); }
+.wm-popup .maplibregl-popup-tip { border-top-color: var(--board) !important; border-bottom-color: var(--board) !important; }
+.wm-popup .pp-name { font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.wm-popup .pp-who { font-size: 12px; color: oklch(0.82 0.03 262); margin-top: 1px; }
+.wm-popup .btn { margin-top: 8px; min-height: 32px; font-size: 12.5px; padding: 0 12px; border-radius: 8px; }
 
 /* "still to pin" suggestion chips from interviews */
 .topin { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
@@ -412,12 +413,11 @@ select { -webkit-appearance: none; appearance: none; background-image: url("data
 .placebar.show { display: flex; }
 
 @media (hover: none) {
-  .worldmap { cursor: default; }
-  .wm-pin:hover { transform: translate(-50%, -100%); }
+  .wm-marker:hover .head { transform: none; }
   .topin .pin-chip:hover { border-color: transparent; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .wm-pin { animation: none; }
+  .wm-marker .head { animation: none; }
 }
 
 /* ---------- Report ---------- */
@@ -599,6 +599,22 @@ footer.foot::before {
   50%      { transform: rotate(15deg) translateY(-12px); }
 }
 
+/* animated flight paths drifting behind the hero text (vanilla port of FloatingPaths) */
+.board-paths { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.board-paths svg { width: 100%; height: 100%; display: block; }
+.board-paths path {
+  fill: none; stroke: var(--amber);
+  stroke-dasharray: 0.35 0.65;
+  animation: pathFlow var(--dur, 24s) linear infinite;
+}
+@keyframes pathFlow {
+  0%   { stroke-dashoffset: 1;  opacity: .10; }
+  50%  {                        opacity: .38; }
+  100% { stroke-dashoffset: -1; opacity: .10; }
+}
+/* keep hero content above the drifting paths */
+.board .eyebrow, .board h1, .board p.lead, .board .meta-row { position: relative; z-index: 1; }
+
 /* the section tick gently throbs */
 .section-title::before { animation: tickThrob 3.2s var(--ease) infinite; }
 @keyframes tickThrob {
@@ -698,14 +714,14 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
   .reveal, .departures .dep { opacity: 1 !important; transform: none !important; }
-  .sky, .board .sky-plane { display: none !important; }
+  .sky, .board .sky-plane, .board-paths { display: none !important; }
 }
 
 /* ---------- Print / PDF ---------- */
 @media print {
   body { background: #fff; }
   body::before { display: none !important; }
-  .nav, .toast, .modal-back, .timer, .board .plane, .sky, .board .sky-plane,
+  .nav, .toast, .modal-back, .timer, .board .plane, .sky, .board .sky-plane, .board-paths,
   .btn, .done-toggle, .progress-bar-wrap .bar, .add-row, .config-warn, .no-print { display: none !important; }
   .wrap { max-width: none; padding: 0; }
   .card, .mission, .iv, .country, .board { box-shadow: none !important; border: 1px solid #ccd3e0; break-inside: avoid; }

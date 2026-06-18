@@ -12,6 +12,7 @@
 <main class="wrap">
 
   <section class="board reveal">
+    <div class="board-paths" aria-hidden="true"></div>
     <span class="plane" aria-hidden="true">✈</span>
     <span class="eyebrow"><span aria-hidden="true">✈</span> English Project Day · Class 8</span>
     <h1>Destination <span class="splitflap" id="flap" data-word="ENGLISH">ENGLISH</span></h1>
@@ -123,6 +124,36 @@
   function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
   App.onData(renderGroupState);
   renderGroupState();
+
+  // animated flight paths behind the hero (vanilla port of FloatingPaths)
+  (function () {
+    const host = document.querySelector(".board-paths");
+    if (!host) return;
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function pathsFor(position) {
+      let out = "";
+      for (let i = 0; i < 36; i++) {
+        const d =
+          "M-" + (380 - i * 5 * position) + " -" + (189 + i * 6) +
+          "C-" + (380 - i * 5 * position) + " -" + (189 + i * 6) +
+          " -" + (312 - i * 5 * position) + " " + (216 - i * 6) +
+          " " + (152 - i * 5 * position) + " " + (343 - i * 6) +
+          "C" + (616 - i * 5 * position) + " " + (470 - i * 6) +
+          " " + (684 - i * 5 * position) + " " + (875 - i * 6) +
+          " " + (684 - i * 5 * position) + " " + (875 - i * 6);
+        const w = (0.5 + i * 0.03).toFixed(2);
+        const dur = (20 + i * 0.6).toFixed(1);
+        const delay = (i * -0.7).toFixed(1);
+        out += '<path d="' + d + '" pathLength="1" stroke-width="' + w +
+          '" style="--dur:' + dur + 's;animation-delay:' + delay + 's"></path>';
+      }
+      return out;
+    }
+    host.innerHTML =
+      '<svg viewBox="0 0 696 316" fill="none" preserveAspectRatio="xMidYMid slice">' +
+      pathsFor(1) + pathsFor(-1) + "</svg>";
+    if (reduce) host.querySelectorAll("path").forEach((p) => (p.style.animation = "none"));
+  })();
 
   // split-flap destination word in the hero
   (function () {

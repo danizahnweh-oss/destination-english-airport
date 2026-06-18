@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>World Map · Destination English</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css" />
 <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
@@ -37,10 +38,7 @@
       <button class="btn btn-ghost" id="placeCancel" type="button" style="min-height:34px;padding:0 12px;font-size:13px">Cancel</button>
     </div>
 
-    <div class="worldmap" id="worldmap">
-      <img class="wm-img" src="assets/world-map.svg" alt="Blank political world map. Tap a country to drop a pin." draggable="false" />
-      <div class="wm-pins" id="wmPins"></div>
-    </div>
+    <div class="worldmap" id="worldmap" role="application" aria-label="Interactive world map. Use the form below to add a country, or pan and tap the map to drop a pin."></div>
 
     <div id="toPinWrap" style="margin-top:14px;display:none">
       <p style="font-family:var(--mono);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;margin:0 0 8px;color:var(--ink-2)">From your interviews, still to pin</p>
@@ -70,6 +68,7 @@
   <footer class="foot">At the end, every group's pins go on one big class map.</footer>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
 <script src="assets/config.js"></script>
 <script src="assets/data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -86,7 +85,7 @@
     el.value = JSON.stringify(list);
     el.dispatchEvent(new Event("input"));   // App binding persists + syncs + fires onData
   }
-  function pins(){ return getManual().filter(function (m) { return typeof m.xp === "number" && typeof m.yp === "number"; }); }
+  function pins(){ return getManual().filter(function (m) { return typeof m.lng === "number" && typeof m.lat === "number"; }); }
 
   /* ---- interview countries (for list + "still to pin" chips) ---- */
   function interviewCountries(){
@@ -134,31 +133,59 @@
     }).join("") + "</div>";
   }
 
-  function renderPins(){
-    const host = document.getElementById("wmPins");
-    const list = getManual();
-    let html = "";
-    list.forEach(function (m, i){
-      if (typeof m.xp !== "number" || typeof m.yp !== "number") return;
-      html += '<button class="wm-pin' + (i === selectedPin ? " sel" : "") + '" type="button" ' +
-        'data-i="' + i + '" style="left:' + m.xp + '%;top:' + m.yp + '%" ' +
-        'aria-label="Pin: ' + escapeHtml(m.country || "country") + '">' +
-        '<span class="head">' + flagFor(m.country) + "</span></button>";
-    });
-    // ghost pin while placing a free location
-    if (ghost){ html += '<span class="wm-pin ghost" style="left:' + ghost.xp + '%;top:' + ghost.yp + '%"><span class="head">📍</span></span>'; }
-    host.innerHTML = html;
+  // live MapLibre markers, rebuilt on each render
+  let markers = [];          // {marker, idx}
+  let ghostMarker = null;
+  let pinPopup = null;
 
-    if (selectedPin >= 0 && list[selectedPin] && typeof list[selectedPin].xp === "number"){
+  function makePinEl(flag, cls){
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "wm-marker" + (cls ? " " + cls : "");
+    btn.innerHTML = '<span class="head">' + flag + "</span>";
+    return btn;
+  }
+
+  function renderPins(){
+    if (!map) return;
+    // clear previous markers / popup / ghost
+    markers.forEach(function (mk){ mk.remove(); });
+    markers = [];
+    if (ghostMarker){ ghostMarker.remove(); ghostMarker = null; }
+    if (pinPopup){ pinPopup.remove(); pinPopup = null; }
+
+    const list = getManual();
+    list.forEach(function (m, i){
+      if (typeof m.lng !== "number" || typeof m.lat !== "number") return;
+      const el = makePinEl(flagFor(m.country), i === selectedPin ? "sel" : "");
+      el.setAttribute("aria-label", "Pin: " + (m.country || "country"));
+      el.addEventListener("click", function (e){
+        e.stopPropagation();
+        selectedPin = (selectedPin === i) ? -1 : i;
+        renderPins();
+      });
+      const mk = new maplibregl.Marker({ element: el, anchor: "center" })
+        .setLngLat([m.lng, m.lat]).addTo(map);
+      markers.push(mk);
+    });
+
+    // ghost pin while placing a free location
+    if (ghost){
+      ghostMarker = new maplibregl.Marker({ element: makePinEl("📍", "ghost"), anchor: "center" })
+        .setLngLat([ghost.lng, ghost.lat]).addTo(map);
+    }
+
+    // popover anchored to the selected pin
+    if (selectedPin >= 0 && list[selectedPin] && typeof list[selectedPin].lng === "number"){
       const m = list[selectedPin];
-      const pop = document.createElement("div");
-      pop.className = "pin-pop";
-      pop.style.left = m.xp + "%"; pop.style.top = m.yp + "%";
-      pop.innerHTML = '<div class="pp-name">' + flagFor(m.country) + " " + escapeHtml(m.country || "Pin") + "</div>" +
+      const node = document.createElement("div");
+      node.innerHTML = '<div class="pp-name">' + flagFor(m.country) + " " + escapeHtml(m.country || "Pin") + "</div>" +
         (m.who ? '<div class="pp-who">' + escapeHtml(m.who) + "</div>" : "") +
         '<button class="btn btn-danger" type="button" id="pinDel">Remove pin</button>';
-      host.appendChild(pop);
-      document.getElementById("pinDel").addEventListener("click", function (e){
+      pinPopup = new maplibregl.Popup({ offset: 20, closeButton: false, className: "wm-popup" })
+        .setLngLat([m.lng, m.lat]).setDOMContent(node).addTo(map);
+      pinPopup.on("close", function (){ if (selectedPin >= 0){ selectedPin = -1; renderPins(); } });
+      node.querySelector("#pinDel").addEventListener("click", function (e){
         e.stopPropagation();
         const arr = getManual(); arr.splice(selectedPin, 1); selectedPin = -1; setManual(arr);
       });
@@ -190,58 +217,56 @@
   function render(){ renderList(); renderPins(); renderToPin(); }
 
   /* ============================ placing ============================ */
-  let ghost = null;          // {xp,yp} free location waiting to be named
+  let ghost = null;          // {lng,lat} free location waiting to be named
   let pending = null;        // {country, who} from a chip, waiting for a tap
 
-  const map = document.getElementById("worldmap");
+  const mapEl = document.getElementById("worldmap");
   const placebar = document.getElementById("placebar");
   const locStatus = document.getElementById("locStatus");
+
+  const map = new maplibregl.Map({
+    container: mapEl,
+    style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+    center: [10, 25],
+    zoom: 1.3,
+    attributionControl: { compact: true },
+    dragRotate: false,
+    pitchWithRotate: false
+  });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+  map.touchZoomRotate.disableRotation();
+  map.on("load", function (){ map.getCanvas().style.cursor = "crosshair"; render(); });
 
   function startPlacing(country, who){
     pending = { country: country, who: who || "" };
     placebar.classList.add("show");
     document.getElementById("placebarText").textContent = "Now tap " + country + " on the map";
-    map.classList.add("placing");
-    map.scrollIntoView({ behavior: "smooth", block: "center" });
+    mapEl.classList.add("placing");
+    mapEl.scrollIntoView({ behavior: "smooth", block: "center" });
   }
-  function stopPlacing(){ pending = null; placebar.classList.remove("show"); map.classList.remove("placing"); }
+  function stopPlacing(){ pending = null; placebar.classList.remove("show"); mapEl.classList.remove("placing"); }
   document.getElementById("placeCancel").addEventListener("click", stopPlacing);
 
-  function coordsFromEvent(e){
-    const r = map.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * 100;
-    const y = ((e.clientY - r.top) / r.height) * 100;
-    return { xp: Math.max(0, Math.min(100, +x.toFixed(2))), yp: Math.max(0, Math.min(100, +y.toFixed(2))) };
-  }
-
-  map.addEventListener("click", function (e){
-    if (e.target.closest(".wm-pin") || e.target.closest(".pin-pop")) return;  // handled elsewhere
-    const c = coordsFromEvent(e);
+  map.on("click", function (e){
+    const lng = +e.lngLat.lng.toFixed(4);
+    const lat = +e.lngLat.lat.toFixed(4);
     if (pending){
       const arr = getManual();
-      arr.push({ country: pending.country, who: pending.who, xp: c.xp, yp: c.yp });
+      arr.push({ country: pending.country, who: pending.who, lng: lng, lat: lat });
+      const justPinned = pending.country;
       stopPlacing();
       selectedPin = -1;
       setManual(arr);
-      App.toast && App.toast("Pinned " + pending.country + " " + flagFor(pending.country));
+      App.toast && App.toast("Pinned " + justPinned + " " + flagFor(justPinned));
       return;
     }
     // free placement: set a ghost + prime the name form
-    ghost = c; selectedPin = -1;
+    ghost = { lng: lng, lat: lat }; selectedPin = -1;
     locStatus.textContent = "📍 Location set ✓ (name it below; tap the map again to move).";
     renderPins();
     document.getElementById("addCountry").focus({ preventScroll: true });
   });
 
-  // select / deselect pins
-  document.getElementById("wmPins").addEventListener("click", function (e){
-    const pin = e.target.closest(".wm-pin");
-    if (!pin || pin.classList.contains("ghost")) return;
-    e.stopPropagation();
-    const i = +pin.getAttribute("data-i");
-    selectedPin = (selectedPin === i) ? -1 : i;
-    renderPins();
-  });
   document.addEventListener("keydown", function (e){
     if (e.key === "Escape"){ if (pending) stopPlacing(); if (selectedPin >= 0){ selectedPin = -1; renderPins(); } }
   });
@@ -252,17 +277,18 @@
     document.getElementById("addWho").value = "";
     ghost = null;
     locStatus.textContent = "📍 Location: not set yet. Tap the map.";
+    renderPins();
   }
   document.getElementById("addBtn").addEventListener("click", function (){
     const country = document.getElementById("addCountry").value.trim();
     if (!country){ document.getElementById("addCountry").focus(); return; }
     const who = document.getElementById("addWho").value.trim();
     const entry = { country: country, who: who };
-    if (ghost){ entry.xp = ghost.xp; entry.yp = ghost.yp; }
+    if (ghost){ entry.lng = ghost.lng; entry.lat = ghost.lat; }
     const arr = getManual(); arr.push(entry);
     selectedPin = -1;
     setManual(arr);
-    App.toast && App.toast((entry.xp != null ? "Pinned " : "Added ") + country + " " + flagFor(country));
+    App.toast && App.toast((entry.lng != null ? "Pinned " : "Added ") + country + " " + flagFor(country));
     resetForm();
   });
 
