@@ -11,11 +11,11 @@
 
 <main class="wrap">
 
-  <section class="board">
+  <section class="board reveal">
     <span class="plane">✈</span>
     <span class="eyebrow">✈ Project Day · English · Class 8</span>
-    <h1>Destination <span class="flip">ENGLISH</span></h1>
-    <p class="lead">A real English mission at Munich Airport (MUC). Hunt for words, talk to travellers, map the world — together on your iPads, in real time.</p>
+    <h1>Destination <span class="splitflap" id="flap" data-word="ENGLISH">ENGLISH</span></h1>
+    <p class="lead">A real English mission at Munich Airport (MUC). Hunt for words, talk to travellers, map the world, all together on your iPads in real time.</p>
     <div class="meta-row">
       <span>📍 Munich Airport · Terminal 1 / 2 / MAC</span>
       <span>⏱ ~2 hours</span>
@@ -27,38 +27,37 @@
   <div style="height:20px"></div>
 
   <!-- Group box -->
-  <section class="card" id="groupBox">
+  <section class="card reveal reveal-1" id="groupBox">
     <div class="sec-head"><div class="num">✦</div><h2>Start with your group</h2></div>
     <p class="sec-sub">Create one group and share the code, so everyone's iPad shows the same answers live.</p>
     <div id="groupState"></div>
   </section>
 
-  <!-- What to do -->
-  <p class="section-title">Choose an activity</p>
-  <div class="cta-grid">
-    <a class="cta" href="missions.html">
-      <span class="ico">🔍</span>
-      <h3>Scavenger Hunt</h3>
-      <p>8 missions across the terminal. Collect proof and points.</p>
-      <span class="go">Start hunting →</span>
+  <!-- Departures board -->
+  <p class="section-title">Today's departures</p>
+  <div class="departures reveal reveal-2">
+    <div class="dep-header">
+      <span class="col-route">Flight</span><span>Destination</span><span class="live">Live</span>
+    </div>
+    <a class="dep" href="missions.html">
+      <span class="route">MUC → WORDS</span>
+      <span class="dep-main"><span class="dep-ico">🔍</span><span><span class="dep-name">Scavenger Hunt</span><br><span class="dep-sub">8 missions across the terminal · collect proof and points</span></span></span>
+      <span class="status">Boarding <span class="arr">→</span></span>
     </a>
-    <a class="cta" href="interviews.html">
-      <span class="ico">🎤</span>
-      <h3>Traveller Interviews</h3>
-      <p>Interview 6 travellers about their country, food and culture.</p>
-      <span class="go">Start talking →</span>
+    <a class="dep" href="interviews.html">
+      <span class="route">MUC → PEOPLE</span>
+      <span class="dep-main"><span class="dep-ico">🎤</span><span><span class="dep-name">Traveller Interviews</span><br><span class="dep-sub">Talk to 6 travellers about country, food and culture</span></span></span>
+      <span class="status">Boarding <span class="arr">→</span></span>
     </a>
-    <a class="cta" href="map.html">
-      <span class="ico">🌍</span>
-      <h3>World Map</h3>
-      <p>Collect every country your travellers come from.</p>
-      <span class="go">Open the map →</span>
+    <a class="dep" href="map.html">
+      <span class="route">MUC → WORLD</span>
+      <span class="dep-main"><span class="dep-ico">🌍</span><span><span class="dep-name">World Map</span><br><span class="dep-sub">Collect every country your travellers come from</span></span></span>
+      <span class="status">Boarding <span class="arr">→</span></span>
     </a>
-    <a class="cta" href="report.html">
-      <span class="ico">📄</span>
-      <h3>Team Report</h3>
-      <p>See everything in one place and save it as a PDF.</p>
-      <span class="go">View report →</span>
+    <a class="dep" href="report.html">
+      <span class="route">MUC → PDF</span>
+      <span class="dep-main"><span class="dep-ico">📄</span><span><span class="dep-name">Team Report</span><br><span class="dep-sub">See everything in one place and save it as a PDF</span></span></span>
+      <span class="status">Boarding <span class="arr">→</span></span>
     </a>
   </div>
 
@@ -112,8 +111,8 @@
     if (App.hasGroup()) {
       host.innerHTML =
         '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">' +
-          '<span style="font-weight:800;font-size:18px">✅ ' + escapeHtml(App.group().name) +
-            ' <span class="muted" style="font-weight:600">· code ' + App.group().id + "</span></span>" +
+          '<span style="font-weight:700;font-size:18px">✅ ' + escapeHtml(App.group().name) +
+            ' <span class="muted" style="font-weight:600;font-family:var(--mono)">· ' + App.group().id + "</span></span>" +
           '<button class="btn btn-ghost" onclick="App.openModal()">Switch / new group</button>' +
           '<a class="btn btn-primary" href="missions.html">Go to missions →</a>' +
         "</div>";
@@ -124,6 +123,29 @@
   function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
   App.onData(renderGroupState);
   renderGroupState();
+
+  // split-flap destination word in the hero
+  (function () {
+    const el = document.getElementById("flap");
+    if (!el) return;
+    const word = (el.dataset.word || el.textContent).trim();
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    el.textContent = "";
+    const tiles = [...word].map((ch) => {
+      const s = document.createElement("span");
+      s.className = "flap"; s.textContent = ch;
+      el.appendChild(s); return { s, ch };
+    });
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) { tiles.forEach((t) => (t.s.textContent = t.ch)); return; }
+    tiles.forEach((t, i) => {
+      let ticks = 7 + i * 3;
+      const iv = setInterval(() => {
+        if (ticks-- <= 0) { t.s.textContent = t.ch; clearInterval(iv); return; }
+        t.s.textContent = chars[Math.floor(Math.random() * chars.length)];
+      }, 55);
+    });
+  })();
 </script>
 </body>
 </html>
