@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Destination English — Project Day · Munich Airport</title>
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<header id="topnav"></header>
+
+<main class="wrap">
+
+  <section class="board">
+    <span class="plane">✈</span>
+    <span class="eyebrow">✈ Project Day · English · Class 8</span>
+    <h1>Destination <span class="flip">ENGLISH</span></h1>
+    <p class="lead">A real English mission at Munich Airport (MUC). Hunt for words, talk to travellers, map the world — together on your iPads, in real time.</p>
+    <div class="meta-row">
+      <span>📍 Munich Airport · Terminal 1 / 2 / MAC</span>
+      <span>⏱ ~2 hours</span>
+      <span>👥 Groups of 4</span>
+      <span>🗣 English only</span>
+    </div>
+  </section>
+
+  <div style="height:20px"></div>
+
+  <!-- Group box -->
+  <section class="card" id="groupBox">
+    <div class="sec-head"><div class="num">✦</div><h2>Start with your group</h2></div>
+    <p class="sec-sub">Create one group and share the code, so everyone's iPad shows the same answers live.</p>
+    <div id="groupState"></div>
+  </section>
+
+  <!-- What to do -->
+  <p class="section-title">Choose an activity</p>
+  <div class="cta-grid">
+    <a class="cta" href="missions.html">
+      <span class="ico">🔍</span>
+      <h3>Scavenger Hunt</h3>
+      <p>8 missions across the terminal. Collect proof and points.</p>
+      <span class="go">Start hunting →</span>
+    </a>
+    <a class="cta" href="interviews.html">
+      <span class="ico">🎤</span>
+      <h3>Traveller Interviews</h3>
+      <p>Interview 6 travellers about their country, food and culture.</p>
+      <span class="go">Start talking →</span>
+    </a>
+    <a class="cta" href="map.html">
+      <span class="ico">🌍</span>
+      <h3>World Map</h3>
+      <p>Collect every country your travellers come from.</p>
+      <span class="go">Open the map →</span>
+    </a>
+    <a class="cta" href="report.html">
+      <span class="ico">📄</span>
+      <h3>Team Report</h3>
+      <p>See everything in one place and save it as a PDF.</p>
+      <span class="go">View report →</span>
+    </a>
+  </div>
+
+  <!-- The idea -->
+  <p class="section-title">The idea</p>
+  <section class="card">
+    <p id="introText" style="margin:0;font-size:16px"></p>
+    <div class="callout">
+      <span class="c-ico">🗣</span>
+      <div><b>English only</b> from the warm-up onwards. Need a word? Ask <em>“How do you say … in English?”</em></div>
+    </div>
+  </section>
+
+  <!-- Goals -->
+  <p class="section-title">What you'll learn</p>
+  <section class="card"><ul class="bullets" id="goalsList"></ul></section>
+
+  <!-- Schedule -->
+  <p class="section-title">How the day runs</p>
+  <section class="card"><ul class="timeline" id="scheduleList"></ul></section>
+
+  <!-- Rules -->
+  <p class="section-title">Ground rules</p>
+  <section class="card"><ul class="bullets warn" id="rulesList"></ul></section>
+
+  <footer class="foot">Made for the Class 8 airport project day · “Destination English”.</footer>
+</main>
+
+<script src="assets/config.js"></script>
+<script src="assets/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/sync.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  // render content from DATA
+  document.getElementById("introText").textContent = DATA.intro;
+  document.getElementById("goalsList").innerHTML =
+    DATA.goals.map((g) => '<li><span class="b-ico">✓</span><span>' + g + "</span></li>").join("");
+  document.getElementById("scheduleList").innerHTML =
+    DATA.schedule.map((s) =>
+      '<li><span class="t">' + s.t + '</span><span class="what">' + s.what +
+      '<br><span class="who">' + s.who + "</span></span></li>").join("");
+  document.getElementById("rulesList").innerHTML =
+    DATA.rules.map((r) => '<li><span class="b-ico">!</span><span>' + r + "</span></li>").join("");
+
+  App.init({ page: "index" });
+
+  // group box on the landing page
+  function renderGroupState() {
+    const host = document.getElementById("groupState");
+    if (App.hasGroup()) {
+      host.innerHTML =
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">' +
+          '<span style="font-weight:800;font-size:18px">✅ ' + escapeHtml(App.group().name) +
+            ' <span class="muted" style="font-weight:600">· code ' + App.group().id + "</span></span>" +
+          '<button class="btn btn-ghost" onclick="App.openModal()">Switch / new group</button>' +
+          '<a class="btn btn-primary" href="missions.html">Go to missions →</a>' +
+        "</div>";
+    } else {
+      host.innerHTML = '<button class="btn btn-primary btn-lg" onclick="App.openModal()">Create or join a group</button>';
+    }
+  }
+  function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+  App.onData(renderGroupState);
+  renderGroupState();
+</script>
+</body>
+</html>

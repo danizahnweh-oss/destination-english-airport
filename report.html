@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Team Report — Destination English</title>
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<header id="topnav"></header>
+
+<main class="wrap narrow">
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px" class="no-print">
+    <button class="btn btn-primary btn-lg" onclick="App.exportPDF()">⬇ Save as PDF</button>
+    <a class="btn btn-ghost" href="missions.html">Back to missions</a>
+  </div>
+
+  <section class="card" id="reportCard">
+    <div class="report-head">
+      <div>
+        <div class="eyebrow" style="color:var(--brand-dark)">✈ Destination English · Munich Airport</div>
+        <h1 id="rTitle">Team Report</h1>
+        <div class="sub" id="rSub"></div>
+      </div>
+      <div class="score-badge">
+        <div class="n" id="rScore">0</div>
+        <div class="cap" style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px">points</div>
+      </div>
+    </div>
+
+    <div class="r-block">
+      <h2>Scavenger Hunt</h2>
+      <div id="rMissions"></div>
+    </div>
+
+    <div class="r-block">
+      <h2>Interviews</h2>
+      <div id="rInterviews"></div>
+    </div>
+
+    <div class="r-block">
+      <h2>Countries on our world map</h2>
+      <div id="rCountries"></div>
+    </div>
+  </section>
+
+  <footer class="foot no-print">On iPad: tap “Save as PDF”, then Share → Print → pinch to open → Save to Files.</footer>
+</main>
+
+<script src="assets/config.js"></script>
+<script src="assets/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/sync.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+  function val(k){ return (App.getVal(k) || "").trim(); }
+  function answer(k){ const v = val(k); return v ? '<span class="a">' + esc(v) + "</span>" : '<span class="a blank">— not answered —</span>'; }
+  function flagFor(n){ return DATA.flags[n.trim().toLowerCase()] || "🌍"; }
+
+  function render() {
+    // header
+    const g = App.group();
+    const today = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+    document.getElementById("rTitle").textContent = g ? g.name : "Team Report";
+    document.getElementById("rSub").innerHTML = (g ? "Group code " + g.id + " · " : "") + today;
+
+    // score
+    let pts = 0;
+    DATA.missions.forEach(function (m) { if (val("m" + m.n + "_done") === "1") pts += m.points; });
+    document.getElementById("rScore").textContent = pts;
+
+    // missions
+    document.getElementById("rMissions").innerHTML = DATA.missions.map(function (m) {
+      const done = val("m" + m.n + "_done") === "1";
+      const answers = m.fields.map(function (f) {
+        return '<div style="margin:4px 0"><span class="muted">' + esc(f.label) + ":</span> " + answer(f.key) + "</div>";
+      }).join("");
+      return '<div class="r-item"><div class="q">' + m.n + ". " + esc(m.title) +
+        '<span class="r-tag ' + (done ? "ok" : "no") + '">' + (done ? "✓ done · " + m.points + " pts" : "open") + "</span></div>" +
+        answers + "</div>";
+    }).join("");
+
+    // interviews
+    let ivHtml = "";
+    for (let i = 1; i <= DATA.interviewCount; i++) {
+      if (!val("iv" + i + "_name") && !val("iv" + i + "_from")) continue;
+      const rows = DATA.interviewFields.map(function (f) {
+        return '<div style="margin:3px 0"><span class="muted">' + esc(f.label) + ":</span> " + answer("iv" + i + "_" + f.suffix) + "</div>";
+      }).join("");
+      ivHtml += '<div class="r-item"><div class="q">Interview ' + i + "</div>" + rows + "</div>";
+    }
+    document.getElementById("rInterviews").innerHTML = ivHtml || '<p class="muted">No interviews recorded yet.</p>';
+
+    // countries
+    const set = {};
+    for (let i = 1; i <= DATA.interviewCount; i++) { const c = val("iv" + i + "_from"); if (c) set[c.toLowerCase()] = c; }
+    try { JSON.parse(App.getVal("map_manual") || "[]").forEach(function (m) { if (m.country) set[m.country.toLowerCase()] = m.country; }); } catch (e) {}
+    const keys = Object.keys(set);
+    document.getElementById("rCountries").innerHTML = keys.length
+      ? '<div class="countries">' + keys.sort().map(function (k) {
+          return '<div class="country"><span class="flag">' + flagFor(set[k]) + '</span><div class="c-name">' + esc(set[k]) + "</div></div>";
+        }).join("") + "</div>"
+      : '<p class="muted">No countries recorded yet.</p>';
+  }
+
+  App.onData(render);
+  App.init({ page: "report" });
+  render();
+</script>
+</body>
+</html>

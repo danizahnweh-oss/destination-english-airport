@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Traveller Interviews — Destination English</title>
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<header id="topnav"></header>
+
+<main class="wrap">
+  <section class="board" style="border-radius:20px">
+    <span class="eyebrow">Phase 2 · Interviews</span>
+    <h1 style="font-size:clamp(26px,5vw,38px)">Talk to travellers</h1>
+    <p class="lead">Interview six travellers. Be friendly — it's a conversation, not a test. Learn about their home and give them a tip for Munich.</p>
+  </section>
+
+  <div style="height:18px"></div>
+
+  <!-- How to start -->
+  <section class="card help-card">
+    <div class="sec-head"><div class="num">💬</div><h2>How to start</h2></div>
+    <ul class="bullets" id="starters" style="margin-bottom:14px"></ul>
+    <p class="muted" style="font-weight:800;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">Questions you could ask</p>
+    <div class="qbank" id="qbank"></div>
+  </section>
+
+  <div class="progress-bar-wrap">
+    <span class="stat">Interviews <b id="ivCount">0</b>/<span id="ivTotal">6</span></span>
+    <div class="bar"><span id="ivBar"></span></div>
+    <span class="muted">An interview counts once it has a name.</span>
+  </div>
+
+  <div id="ivList"></div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+    <a class="btn btn-primary" href="map.html">Next: World map →</a>
+    <a class="btn btn-ghost" href="report.html">View team report</a>
+  </div>
+
+  <footer class="foot">Remember: only friendly questions about country, culture and food.</footer>
+</main>
+
+<script src="assets/config.js"></script>
+<script src="assets/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/sync.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  // help
+  document.getElementById("starters").innerHTML =
+    DATA.interviewHelp.starters.map(function (s) { return '<li><span class="b-ico">★</span><span>' + s + "</span></li>"; }).join("");
+  document.getElementById("qbank").innerHTML =
+    DATA.interviewHelp.questions.map(function (q) { return '<span class="chip">' + q + "</span>"; }).join("");
+
+  // build 6 interview cards
+  const N = DATA.interviewCount;
+  document.getElementById("ivTotal").textContent = N;
+  let html = "";
+  for (let i = 1; i <= N; i++) {
+    const fields = DATA.interviewFields.map(function (f) {
+      const key = "iv" + i + "_" + f.suffix;
+      const cls = f.full ? "field full" : "field";
+      const input = f.full
+        ? '<input type="text" data-key="' + key + '" placeholder="' + f.placeholder + '">'
+        : '<input type="text" data-key="' + key + '" placeholder="' + f.placeholder + '">';
+      return '<div class="' + cls + '"><label>' + f.label + "</label>" + input + "</div>";
+    }).join("");
+    html +=
+      '<div class="iv">' +
+        '<div class="iv-head"><span class="av">🧳</span><h3>Interview ' + i + "</h3></div>" +
+        '<div class="iv-grid">' + fields +
+          '<div class="field full"><label class="done-toggle" style="margin-top:0">' +
+            '<input type="checkbox" data-key="iv' + i + '_marked"><span class="box"></span>' +
+            '<span class="lbl">We marked this country on our world map</span></label></div>' +
+        "</div>" +
+      "</div>";
+  }
+  document.getElementById("ivList").innerHTML = html;
+
+  function refresh() {
+    let done = 0;
+    for (let i = 1; i <= N; i++) if (App.getVal("iv" + i + "_name").trim()) done++;
+    document.getElementById("ivCount").textContent = done;
+    document.getElementById("ivBar").style.width = Math.round((done / N) * 100) + "%";
+  }
+  App.onData(refresh);
+  App.init({ page: "interviews" });
+  refresh();
+</script>
+</body>
+</html>

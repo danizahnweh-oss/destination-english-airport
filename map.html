@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>World Map — Destination English</title>
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<header id="topnav"></header>
+
+<main class="wrap narrow">
+  <!-- hidden field: manual countries, synced like every other field -->
+  <input type="hidden" id="mapManualField" data-key="map_manual" />
+
+  <section class="board" style="border-radius:20px">
+    <span class="eyebrow">Our world map</span>
+    <h1 style="font-size:clamp(26px,5vw,38px)">Where do they come from?</h1>
+    <p class="lead">Every traveller you interview adds a country here automatically. Add extra countries by hand too — it updates on every team iPad.</p>
+  </section>
+
+  <div style="height:18px"></div>
+
+  <section class="card">
+    <div class="map-stat">
+      <div class="big" id="countN">0</div>
+      <div class="cap">countries found today</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec-head"><div class="num">➕</div><h2>Add a country</h2></div>
+    <p class="sec-sub">Use this if you spot a country that isn't from an interview.</p>
+    <div class="add-row">
+      <div class="field"><label>Country</label><input type="text" id="addCountry" placeholder="Japan"></div>
+      <div class="field"><label>Traveller's name (optional)</label><input type="text" id="addWho" placeholder="Yuki"></div>
+      <button class="btn btn-primary" id="addBtn">Add</button>
+    </div>
+  </section>
+
+  <p class="section-title">Countries collected</p>
+  <div id="countryList"></div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px">
+    <a class="btn btn-primary" href="report.html">Next: Team report →</a>
+    <a class="btn btn-ghost" href="interviews.html">Back to interviews</a>
+  </div>
+
+  <footer class="foot">At the end, every group's countries go on one big class map.</footer>
+</main>
+
+<script src="assets/config.js"></script>
+<script src="assets/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/sync.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  function flagFor(name) {
+    const f = DATA.flags[name.trim().toLowerCase()];
+    return f || "🌍";
+  }
+  function getManual() { try { return JSON.parse(App.getVal("map_manual") || "[]"); } catch (e) { return []; } }
+
+  function collect() {
+    const items = [];
+    for (let i = 1; i <= DATA.interviewCount; i++) {
+      const c = App.getVal("iv" + i + "_from").trim();
+      if (c) items.push({ country: c, who: App.getVal("iv" + i + "_name").trim() || ("Interview " + i), src: "interview" });
+    }
+    getManual().forEach(function (m) { if (m.country) items.push({ country: m.country, who: m.who || "", src: "manual" }); });
+    // group by lowercase country
+    const groups = {};
+    items.forEach(function (it) {
+      const k = it.country.toLowerCase();
+      if (!groups[k]) groups[k] = { country: it.country, names: [], src: it.src };
+      if (it.who) groups[k].names.push(it.who);
+    });
+    return groups;
+  }
+
+  function render() {
+    const groups = collect();
+    const keys = Object.keys(groups);
+    document.getElementById("countN").textContent = keys.length;
+    const host = document.getElementById("countryList");
+    if (!keys.length) {
+      host.innerHTML = '<div class="empty"><div class="e-ico">🗺️</div><p>No countries yet. Interview a traveller or add one above.</p></div>';
+      return;
+    }
+    host.innerHTML = '<div class="countries">' + keys.sort().map(function (k) {
+      const g = groups[k];
+      return '<div class="country">' +
+        '<span class="flag">' + flagFor(g.country) + "</span>" +
+        "<div><div class=\"c-name\">" + escapeHtml(g.country) + "</div>" +
+        (g.names.length ? '<div class="c-who">' + escapeHtml(g.names.join(", ")) + "</div>" : "") + "</div>" +
+        "</div>";
+    }).join("") + "</div>";
+  }
+  function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+  document.getElementById("addBtn").addEventListener("click", function () {
+    const country = document.getElementById("addCountry").value.trim();
+    if (!country) return;
+    const who = document.getElementById("addWho").value.trim();
+    const list = getManual();
+    list.push({ country: country, who: who });
+    App.toast && App.toast("Added " + country + " " + flagFor(country));
+    document.getElementById("addCountry").value = "";
+    document.getElementById("addWho").value = "";
+    // setVal triggers onData → render
+    window.__setMapManual(list);
+  });
+
+  // setter: write manual countries through the hidden bound field so it persists + syncs
+  window.__setMapManual = function (list) {
+    const el = document.getElementById("mapManualField");
+    el.value = JSON.stringify(list);
+    el.dispatchEvent(new Event("input"));   // App's binding persists + syncs + fires onData
+  };
+
+  App.onData(render);
+  App.init({ page: "map" });
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scavenger Hunt — Destination English</title>
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<header id="topnav"></header>
+
+<main class="wrap">
+  <section class="board" style="border-radius:20px">
+    <span class="eyebrow">Phase 1 · 40 minutes</span>
+    <h1 style="font-size:clamp(26px,5vw,38px)">Airport Scavenger Hunt</h1>
+    <p class="lead">Work in your group, always in English. Tick each mission when it's done — points add up automatically and sync to your whole team.</p>
+  </section>
+
+  <div style="height:18px"></div>
+
+  <div class="progress-bar-wrap">
+    <span class="stat">Done <b id="doneCount">0</b>/<span id="totalCount">8</span></span>
+    <div class="bar"><span id="barFill"></span></div>
+    <span class="stat">Points <b id="pointCount">0</b></span>
+    <span class="timer" id="timer">
+      <span>⏱</span><span id="clock">40:00</span>
+      <button class="btn btn-amber t-btn" id="timerBtn" type="button">Start</button>
+    </span>
+  </div>
+
+  <div id="missionList"></div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+    <a class="btn btn-primary" href="interviews.html">Next: Interviews →</a>
+    <a class="btn btn-ghost" href="report.html">View team report</a>
+  </div>
+
+  <footer class="foot">Tip: take photos of signs as proof — type the key facts here.</footer>
+</main>
+
+<script src="assets/config.js"></script>
+<script src="assets/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/sync.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  // ---- build mission cards ----
+  const list = document.getElementById("missionList");
+  document.getElementById("totalCount").textContent = DATA.missions.length;
+  list.innerHTML = DATA.missions.map(function (m) {
+    const fields = m.fields.map(function (f) {
+      const input = f.big
+        ? '<textarea data-key="' + f.key + '" placeholder="' + f.placeholder + '"></textarea>'
+        : '<input type="text" data-key="' + f.key + '" placeholder="' + f.placeholder + '">';
+      return '<div class="field"><label>' + f.label + "</label>" + input + "</div>";
+    }).join("");
+    return (
+      '<div class="mission" id="mission' + m.n + '">' +
+        '<div class="m-top">' +
+          '<span class="m-num">' + m.n + "</span>" +
+          '<span class="m-title">' + m.title + "</span>" +
+          '<span class="pts">' + m.points + " pts</span>" +
+        "</div>" +
+        '<p class="m-task">' + m.task + "</p>" +
+        '<p class="proof-hint">' + m.proof + "</p>" +
+        '<div class="m-fields">' + fields + "</div>" +
+        '<label class="done-toggle"><input type="checkbox" data-key="m' + m.n + '_done">' +
+          '<span class="box"></span><span class="lbl">Mark as done</span></label>' +
+      "</div>"
+    );
+  }).join("");
+
+  // ---- progress ----
+  function refresh() {
+    let done = 0, pts = 0;
+    DATA.missions.forEach(function (m) {
+      if (App.getVal("m" + m.n + "_done") === "1") { done++; pts += m.points; }
+      const card = document.getElementById("mission" + m.n);
+      if (card) card.classList.toggle("is-done", App.getVal("m" + m.n + "_done") === "1");
+    });
+    document.getElementById("doneCount").textContent = done;
+    document.getElementById("pointCount").textContent = pts;
+    const pct = Math.round((done / DATA.missions.length) * 100);
+    document.getElementById("barFill").style.width = pct + "%";
+  }
+  App.onData(refresh);
+
+  App.init({ page: "missions" });
+  refresh();
+
+  // ---- 40-minute countdown (local to this device) ----
+  (function () {
+    var total = 40 * 60, left = total, running = false, iv = null;
+    var clock = document.getElementById("clock"), btn = document.getElementById("timerBtn"), box = document.getElementById("timer");
+    function show() {
+      var m = Math.floor(left / 60), s = left % 60;
+      clock.textContent = m + ":" + (s < 10 ? "0" : "") + s;
+      box.classList.toggle("low", left <= 5 * 60);
+    }
+    function tick() {
+      if (left > 0) { left--; show(); }
+      if (left === 0) { stop(); App.toast("Time's up — head to the meeting point! ✈"); }
+    }
+    function start() { running = true; btn.textContent = "Pause"; iv = setInterval(tick, 1000); }
+    function stop() { running = false; btn.textContent = "Resume"; clearInterval(iv); }
+    btn.addEventListener("click", function () { running ? stop() : start(); });
+    show();
+  })();
+</script>
+</body>
+</html>
