@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Scavenger Hunt — Destination English</title>
+<title>Scavenger Hunt · Destination English</title>
 <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
@@ -13,7 +13,7 @@
   <section class="board" style="border-radius:20px">
     <span class="eyebrow">Phase 1 · 40 minutes</span>
     <h1 style="font-size:clamp(26px,5vw,38px)">Airport Scavenger Hunt</h1>
-    <p class="lead">Work in your group, always in English. Tick each mission when it's done — points add up automatically and sync to your whole team.</p>
+    <p class="lead">Work in your group, always in English. Tick each mission when it's done. Points add up automatically and sync to your whole team.</p>
   </section>
 
   <div style="height:18px"></div>
@@ -35,7 +35,7 @@
     <a class="btn btn-ghost" href="report.html">View team report</a>
   </div>
 
-  <footer class="foot">Tip: take photos of signs as proof — type the key facts here.</footer>
+  <footer class="foot">Tip: take photos of signs as proof, then type the key facts here.</footer>
 </main>
 
 <script src="assets/config.js"></script>
@@ -99,7 +99,7 @@
     }
     function tick() {
       if (left > 0) { left--; show(); }
-      if (left === 0) { stop(); App.toast("Time's up — head to the meeting point! ✈"); }
+      if (left === 0) { stop(); App.toast("Time's up! Head to the meeting point ✈"); }
     }
     function start() { running = true; btn.textContent = "Pause"; iv = setInterval(tick, 1000); }
     function stop() { running = false; btn.textContent = "Resume"; clearInterval(iv); }

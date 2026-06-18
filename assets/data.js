@@ -1,5 +1,5 @@
 /* ============================================================
-   Destination English — content data
+   Destination English · content data
    Edit the texts here to adapt the project day.
    ============================================================ */
 window.DATA = {
@@ -8,20 +8,20 @@ window.DATA = {
   intro:
     "The class explores Munich Airport in small groups, collects real English from the " +
     "signs and screens around them, and then interviews real travellers. English isn't " +
-    "practised in the classroom — it's used where it's really needed.",
+    "practised in the classroom; it's used where it's really needed.",
 
   goals: [
     "Use travel, airport and orientation vocabulary actively.",
     "Dare to speak English to strangers (lower the fear of speaking).",
-    "Train listening & reading with real material — signs, announcements, displays.",
+    "Train listening & reading with real material: signs, announcements, displays.",
     "Work together as a team and present your results in English."
   ],
 
   schedule: [
     { t: "00:00", what: "Welcome, rules, group set-up, hand out tasks, short warm-up (English only from now).", who: "Whole class" },
-    { t: "00:15", what: "Phase 1 — Airport Scavenger Hunt: find words & signs, take photos, collect vocabulary.", who: "Groups of 4" },
+    { t: "00:15", what: "Phase 1: Airport Scavenger Hunt. Find words & signs, take photos, collect vocabulary.", who: "Groups of 4" },
     { t: "00:55", what: "Meet at the meeting point, short break.", who: "Whole class" },
-    { t: "01:00", what: "Phase 2 — Short interviews with travellers in the terminal.", who: "Groups of 4" },
+    { t: "01:00", what: "Phase 2: Short interviews with travellers in the terminal.", who: "Groups of 4" },
     { t: "01:45", what: "Wrap-up: groups present their finds, feedback, reflection.", who: "Whole class" }
   ],
 
@@ -61,8 +61,8 @@ window.DATA = {
       task: "Compare prices at two different shops: ask in English for a 0.5 l bottle of water (“How much is this water, please?”). Which shop is cheaper, and by how much?",
       proof: "Proof: 2 prices + the difference.",
       fields: [
-        { key: "m4_p1", label: "Shop 1 — name & price", placeholder: "Relay — €3.20" },
-        { key: "m4_p2", label: "Shop 2 — name & price", placeholder: "Spar — €2.50" },
+        { key: "m4_p1", label: "Shop 1 (name & price)", placeholder: "Relay, €3.20" },
+        { key: "m4_p2", label: "Shop 2 (name & price)", placeholder: "Spar, €2.50" },
         { key: "m4_diff", label: "Cheaper shop & difference", placeholder: "Spar is cheaper by €0.70." }
       ]},
     { n: 5, points: 10, title: "Five orders (imperatives)",
@@ -99,13 +99,13 @@ window.DATA = {
   /* ---- Interviews ---- */
   interviewHelp: {
     starters: [
-      "“Excuse me, do you have a minute for a school project?” — if they say no, smile: “No problem, thank you!”",
+      "“Excuse me, do you have a minute for a school project?” If they say no, smile: “No problem, thank you!”",
       "Ask only friendly questions about country, culture and food. No questions about age, money, religion or politics.",
-      "At the end, give the person 2–3 tips for Munich and wish them a good trip."
+      "At the end, give the person 2-3 tips for Munich and wish them a good trip."
     ],
     questions: [
       "Where are you flying to today?",
-      "Why are you travelling — holiday, work or family?",
+      "Why are you travelling: holiday, work or family?",
       "What is a typical / national food in your country?",
       "What language do you speak at home?",
       "What is the weather like there right now?",

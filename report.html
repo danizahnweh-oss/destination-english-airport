@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Team Report — Destination English</title>
+<title>Team Report · Destination English</title>
 <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
@@ -55,7 +55,7 @@
 <script>
   function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
   function val(k){ return (App.getVal(k) || "").trim(); }
-  function answer(k){ const v = val(k); return v ? '<span class="a">' + esc(v) + "</span>" : '<span class="a blank">— not answered —</span>'; }
+  function answer(k){ const v = val(k); return v ? '<span class="a">' + esc(v) + "</span>" : '<span class="a blank">not answered</span>'; }
   function flagFor(n){ return DATA.flags[n.trim().toLowerCase()] || "🌍"; }
 
   function render() {

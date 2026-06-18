@@ -1,5 +1,5 @@
 /* ============================================================
-   Destination English — app engine
+   Destination English · app engine
    - builds the top navigation + group modal + toast
    - manages group profiles (create / join by code / switch)
    - binds every [data-key] field to the store
@@ -133,7 +133,7 @@ window.App = (function () {
   function createGroup(name) {
     const g = { id: randCode(), name: name || "Our team" };
     // seed name field so other devices can read it
-    activateGroup(g, { toast: "Group created — code " + g.id }).then(() => setVal("_group_name", g.name));
+    activateGroup(g, { toast: "Group created · code " + g.id }).then(() => setVal("_group_name", g.name));
     return g;
   }
 
@@ -187,8 +187,8 @@ window.App = (function () {
 
   function modalHTML() {
     return (
-      '<div class="modal-back" id="grpBack"><div class="modal">' +
-        '<h2>Your group</h2>' +
+      '<div class="modal-back" id="grpBack"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="grpTitle">' +
+        '<h2 id="grpTitle">Your group</h2>' +
         '<p class="sub">One group, many iPads. Share your group code so your team-mates join the same group.</p>' +
         '<div class="tabs">' +
           '<button data-tab="mine" class="active">My groups</button>' +
@@ -219,8 +219,20 @@ window.App = (function () {
     );
   }
 
-  function openModal() { renderGroupList(); document.getElementById("grpBack").classList.add("show"); }
-  function closeModal() { document.getElementById("grpBack").classList.remove("show"); }
+  let lastFocus = null;
+  function openModal() {
+    renderGroupList();
+    lastFocus = document.activeElement;
+    const back = document.getElementById("grpBack");
+    back.classList.add("show");
+    // move focus into the dialog (first focusable in the active pane)
+    const first = back.querySelector(".pane.active input, .pane.active button, .tabs button");
+    if (first) setTimeout(() => first.focus(), 30);
+  }
+  function closeModal() {
+    document.getElementById("grpBack").classList.remove("show");
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+  }
 
   function renderGroupList() {
     const host = document.getElementById("grpList");
@@ -247,6 +259,9 @@ window.App = (function () {
 
     const back = document.getElementById("grpBack");
     back.addEventListener("click", (e) => { if (e.target === back) closeModal(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && back.classList.contains("show")) closeModal();
+    });
     back.querySelectorAll(".tabs button").forEach((b) =>
       b.addEventListener("click", () => {
         back.querySelectorAll(".tabs button").forEach((x) => x.classList.remove("active"));
