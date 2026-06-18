@@ -11,7 +11,7 @@ and a clean **PDF** can be saved at the end.
 | `index.html` | Landing / info page: idea, learning goals, schedule, rules, create/join a group |
 | `missions.html` | The 8-mission Scavenger Hunt with points, progress bar and a 40-min timer |
 | `interviews.html` | 6 traveller-interview cards + a question bank |
-| `map.html` | “World map” board — countries collected from interviews + manual entries |
+| `map.html` | Interactive world map: tap to drop a pin for every country, plus interview/manual entries |
 | `report.html` | Full team report → **Save as PDF** |
 
 Content lives in `assets/data.js` — edit the texts there to adapt the day.

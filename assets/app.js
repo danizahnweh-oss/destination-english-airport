@@ -308,6 +308,44 @@ window.App = (function () {
 
   function escapeHTML(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
+  /* ---------- decorative airport sky (planes drifting in the background + hero) ---------- */
+  // side-view jet silhouette, nose pointing RIGHT (so it matches left→right travel)
+  const PLANE_SVG =
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+    '<path d="M22 12c0-.83-.67-1.5-1.5-1.5H15L9 4H6.5l3 6.5H4l-2-2.5H.5L2 12 .5 16.5H2l2-2.5h5.5L6.5 20H9l6-6.5h5.5c.83 0 1.5-.67 1.5-1.5z"/>' +
+    "</svg>";
+  function addPlanes() {
+    // full-page background sky, behind the content column
+    if (!document.querySelector(".sky")) {
+      const sky = document.createElement("div");
+      sky.className = "sky";
+      sky.setAttribute("aria-hidden", "true");
+      const lanes = [
+        { y: "12vh", dur: 30, delay: 0,  s: 1 },
+        { y: "40vh", dur: 46, delay: 9,  s: 0.7 },
+        { y: "66vh", dur: 36, delay: 19, s: 1.1 },
+        { y: "88vh", dur: 54, delay: 27, s: 0.6 }
+      ];
+      sky.innerHTML = lanes.map((l) =>
+        '<span class="p" style="--y:' + l.y + ';--dur:' + l.dur + 's;--delay:' + l.delay + 's;--sz:' + (26 * l.s) + 'px">' + PLANE_SVG + "</span>"
+      ).join("");
+      document.body.insertBefore(sky, document.body.firstChild);
+    }
+    // planes flying across each departures-board hero
+    document.querySelectorAll(".board").forEach((b) => {
+      if (b.querySelector(".sky-plane")) return;
+      [{ y: "16%", dur: 15, delay: 0, sz: 26 },
+       { y: "62%", dur: 22, delay: 7, sz: 20 },
+       { y: "40%", dur: 18, delay: 12, sz: 17 }].forEach((l) => {
+        const p = document.createElement("span");
+        p.className = "sky-plane";
+        p.innerHTML = PLANE_SVG;
+        p.style.cssText = "--y:" + l.y + ";--dur:" + l.dur + "s;--delay:" + l.delay + "s;--sz:" + l.sz + "px";
+        b.appendChild(p);
+      });
+    });
+  }
+
   /* ---------- PDF ---------- */
   function exportPDF() { window.print(); }
 
@@ -332,6 +370,7 @@ window.App = (function () {
     const navHost = document.getElementById("topnav");
     if (navHost) { navHost.className = "nav"; navHost.innerHTML = navHTML(); }
     wireModal();
+    addPlanes();
     configWarn();
 
     // restore last active group

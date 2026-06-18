@@ -53,6 +53,7 @@ body {
 }
 
 .wrap {
+  position: relative; z-index: 1;
   max-width: 980px; margin: 0 auto;
   padding: 18px max(18px, env(safe-area-inset-left)) calc(96px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-right));
 }
@@ -83,7 +84,9 @@ a { color: var(--brand-dark); }
   background: linear-gradient(160deg, var(--brand), var(--brand-dark));
   display: grid; place-items: center; color: #fff; font-size: 16px;
   box-shadow: 0 4px 10px rgba(20,99,255,.35);
+  transition: transform .3s var(--ease);
 }
+.brand:hover .logo { transform: translateY(-2px) rotate(-12deg) scale(1.06); }
 .nav-links { display: flex; gap: 4px; margin-left: 6px; overflow-x: auto; flex: 1; -webkit-overflow-scrolling: touch; }
 .nav-links a {
   text-decoration: none; color: var(--muted); font-weight: 700; font-size: 14px;
@@ -345,6 +348,78 @@ select { -webkit-appearance: none; appearance: none; background-image: url("data
 .empty { text-align: center; color: var(--muted); padding: 30px 10px; }
 .empty .e-ico { font-size: 40px; opacity: .5; }
 
+/* ---------- Interactive world map (tap to pin) ---------- */
+.worldmap {
+  position: relative; width: 100%; border-radius: var(--radius-sm);
+  overflow: hidden; background: #eaf1fb;
+  box-shadow: inset 0 0 0 1px var(--line);
+  touch-action: manipulation; cursor: crosshair; -webkit-tap-highlight-color: transparent;
+}
+.worldmap.placing { outline: 3px solid var(--amber); outline-offset: -3px; }
+.wm-img { display: block; width: 100%; height: auto; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.wm-pins { position: absolute; inset: 0; pointer-events: none; }   /* pins re-enable it themselves */
+
+.wm-pin {
+  position: absolute; transform: translate(-50%, -100%); transform-origin: bottom center;
+  pointer-events: auto; cursor: pointer; border: none; background: none; padding: 0;
+  transition: transform .12s var(--ease); animation: pin-drop .42s var(--ease) both;
+}
+.wm-pin .head {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 15px; background: var(--brand); border: 2px solid #fff;
+  box-shadow: 0 3px 7px oklch(0.30 0.08 262 / 0.45);
+}
+.wm-pin::after {                       /* the little pointer that touches the spot */
+  content: ""; position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: #fff;
+}
+.wm-pin.ghost .head { background: var(--amber); opacity: .9; }
+.wm-pin:hover, .wm-pin:focus-visible { transform: translate(-50%, -100%) scale(1.14); z-index: 5; outline: none; }
+.wm-pin.sel { transform: translate(-50%, -100%) scale(1.18); z-index: 6; }
+.wm-pin.sel .head { background: var(--brand-dark); box-shadow: 0 0 0 3px oklch(0.55 0.17 256 / 0.3), 0 3px 7px oklch(0.30 0.08 262 / 0.5); }
+@keyframes pin-drop { from { opacity: 0; transform: translate(-50%, -160%) scale(.7); } to { opacity: 1; transform: translate(-50%, -100%) scale(1); } }
+
+/* popover anchored to a selected pin */
+.pin-pop {
+  position: absolute; transform: translate(-50%, -100%); z-index: 20;
+  background: var(--board); color: #fff; border-radius: 10px; padding: 9px 11px;
+  box-shadow: var(--shadow-lg); min-width: 130px; max-width: 200px; margin-top: -36px;
+  pointer-events: auto;
+}
+.pin-pop .pp-name { font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.pin-pop .pp-who { font-size: 12px; color: oklch(0.82 0.03 262); margin-top: 1px; }
+.pin-pop button { margin-top: 8px; min-height: 32px; font-size: 12.5px; padding: 0 12px; border-radius: 8px; }
+.pin-pop::after { content: ""; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--board); }
+
+/* "still to pin" suggestion chips from interviews */
+.topin { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.topin .pin-chip {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  background: var(--brand-tint); color: var(--brand-dark); border: 1.5px solid transparent;
+  border-radius: 999px; padding: 7px 13px; font-size: 13.5px; font-weight: 700; min-height: 38px;
+  transition: border-color .15s var(--ease), transform .12s var(--ease);
+}
+.topin .pin-chip:hover { border-color: var(--brand); }
+.topin .pin-chip:active { transform: scale(.97); }
+.topin .pin-chip:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+
+.map-hint { font-size: 13px; color: var(--ink-2); margin: 0 0 12px; display: flex; align-items: center; gap: 7px; }
+.placebar {
+  display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: oklch(0.82 0.15 78 / 0.16); border: 1px solid oklch(0.82 0.15 78 / 0.4);
+  color: var(--amber-ink); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; font-weight: 700; font-size: 14px;
+}
+.placebar.show { display: flex; }
+
+@media (hover: none) {
+  .worldmap { cursor: default; }
+  .wm-pin:hover { transform: translate(-50%, -100%); }
+  .topin .pin-chip:hover { border-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wm-pin { animation: none; }
+}
+
 /* ---------- Report ---------- */
 .report-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; border-bottom: 3px solid var(--board); padding-bottom: 14px; margin-bottom: 8px; }
 .report-head h1 { margin: 0; font-size: 26px; }
@@ -455,6 +530,104 @@ footer.foot::before {
   width: 64px; height: 0; border-top: 2px dashed var(--line);
 }
 
+/* ============================================================
+   Playful airport motion · planes everywhere + micro-delight
+   (all decorative — killed in reduced-motion + print below)
+   ============================================================ */
+
+/* full-page sky: planes drift across, behind the content column */
+.sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.sky .p {
+  position: absolute; left: -12vw; top: var(--y, 20vh);
+  width: var(--sz, 24px); height: var(--sz, 24px);
+  color: oklch(0.50 0.12 256 / 0.16);
+  will-change: transform;
+  animation: skyFly var(--dur, 34s) linear infinite; animation-delay: var(--delay, 0s);
+}
+.sky .p svg { width: 100%; height: 100%; display: block; }
+.sky .p::before { /* contrail trails straight behind */
+  content: ""; position: absolute; right: 104%; top: 50%; width: 52px; height: 2px;
+  background: linear-gradient(90deg, transparent, oklch(0.50 0.12 256 / 0.14));
+  transform: translateY(-50%); border-radius: 2px;
+}
+@keyframes skyFly {
+  from { transform: translateX(0); }
+  to   { transform: translateX(130vw); }
+}
+
+/* planes flying inside any departures-board hero */
+.board .sky-plane {
+  position: absolute; left: -16%; top: var(--y, 30%);
+  width: var(--sz, 24px); height: var(--sz, 24px);
+  color: var(--amber); pointer-events: none;
+  will-change: left, opacity; filter: drop-shadow(0 2px 6px oklch(0 0 0 / 0.3));
+  animation: heroFly var(--dur, 16s) linear infinite; animation-delay: var(--delay, 0s);
+}
+.board .sky-plane svg { width: 100%; height: 100%; display: block; }
+.board .sky-plane::before { /* contrail */
+  content: ""; position: absolute; right: 104%; top: 50%; width: 46px; height: 2px;
+  background: linear-gradient(90deg, transparent, oklch(0.82 0.15 78 / 0.45));
+  transform: translateY(-50%); border-radius: 2px;
+}
+@keyframes heroFly {
+  0%   { left: -16%; opacity: 0; }
+  12%  { opacity: .75; }
+  88%  { opacity: .75; }
+  100% { left: 116%; opacity: 0; }
+}
+
+/* the big background plane gently bobs as if cruising */
+.board .plane { animation: planeBob 7s ease-in-out infinite; }
+@keyframes planeBob {
+  0%, 100% { transform: rotate(18deg) translateY(0); }
+  50%      { transform: rotate(15deg) translateY(-12px); }
+}
+
+/* the section tick gently throbs */
+.section-title::before { animation: tickThrob 3.2s var(--ease) infinite; }
+@keyframes tickThrob {
+  0%, 100% { transform: rotate(45deg) scale(1); opacity: 1; }
+  50%      { transform: rotate(45deg) scale(1.35); opacity: .8; }
+}
+
+/* departure rows: icon "takes off" on hover/tap, arrow leaves a trail */
+.dep:hover .dep-ico, .dep:active .dep-ico { transform: translateY(-3px) scale(1.12) rotate(-11deg); }
+.dep .status .arr { transition: transform .25s var(--ease); }
+.dep:hover .status .arr, .dep:active .status .arr { transform: translateX(5px); }
+
+/* a plane rides the progress bar and bobs along */
+.bar > span::after { animation: barPlaneBob 2.6s ease-in-out infinite; }
+@keyframes barPlaneBob {
+  0%, 100% { transform: translateY(-50%) rotate(0); }
+  50%      { transform: translateY(-72%) rotate(-12deg); }
+}
+
+/* completing a mission pops its number */
+.mission.is-done .m-num { animation: numPop .45s var(--ease); }
+@keyframes numPop {
+  0%   { transform: scale(.6) rotate(-12deg); }
+  60%  { transform: scale(1.18) rotate(6deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+/* the toast plane flutters while shown */
+.toast.show .t-ic { animation: flutter 1.4s ease-in-out infinite; display: inline-block; }
+@keyframes flutter {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50%      { transform: translateY(-2px) rotate(10deg); }
+}
+
+/* live dot gets a friend: the word "Live" softly breathes */
+.dep-header .live { animation: breathe 2.6s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+
+/* on iPad (no hover) keep tap delight, drop sticky-hover decoration */
+@media (hover: none) {
+  .brand:hover .logo { transform: none; }
+  .dep:hover .dep-ico { transform: none; }
+  .dep:hover .status .arr { transform: none; }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 720px) {
   .iv-grid { grid-template-columns: 1fr; }
@@ -470,12 +643,13 @@ footer.foot::before {
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
   .reveal, .departures .dep { opacity: 1 !important; transform: none !important; }
+  .sky, .board .sky-plane { display: none !important; }
 }
 
 /* ---------- Print / PDF ---------- */
 @media print {
   body { background: #fff; }
-  .nav, .toast, .modal-back, .timer, .board .plane,
+  .nav, .toast, .modal-back, .timer, .board .plane, .sky, .board .sky-plane,
   .btn, .done-toggle, .progress-bar-wrap .bar, .add-row, .config-warn, .no-print { display: none !important; }
   .wrap { max-width: none; padding: 0; }
   .card, .mission, .iv, .country, .board { box-shadow: none !important; border: 1px solid #ccd3e0; break-inside: avoid; }
