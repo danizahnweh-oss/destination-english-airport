@@ -10,8 +10,8 @@
    the "service_role" key here.
    ============================================================ */
 window.CONFIG = {
-  SUPABASE_URL: "",   // e.g. "https://abcdxyz.supabase.co"
-  SUPABASE_ANON_KEY: "", // e.g. "eyJhbGciOiJ..."
+  SUPABASE_URL: "https://dtedxefupvwwcbwocplv.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_MN8DrEdOp4Il5z50YNQRfg_EQkT-IVM",
 
   // localStorage namespace + app title (usually leave as-is)
   STORAGE_PREFIX: "destEN_",
