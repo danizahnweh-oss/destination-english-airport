@@ -40,7 +40,7 @@ window.DATA = {
       proof: "Proof: the name + 1 sentence.",
       fields: [
         { key: "m1_name", label: "Official name", placeholder: "Munich Airport “…”" },
-        { key: "m1_sentence", label: "One sentence about the person", placeholder: "Franz Josef Strauß was …", big: true }
+        { key: "m1_sentence", label: "One sentence about the person", placeholder: "This person was …", big: true }
       ]},
     { n: 2, points: 10, title: "Airport codes",
       task: "Stand in front of a departures board. Munich's code is MUC. Find three other three-letter airport codes and match each one to the correct city and country.",
