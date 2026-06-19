@@ -38,7 +38,7 @@
       <button class="btn btn-ghost" id="placeCancel" type="button" style="min-height:34px;padding:0 12px;font-size:13px">Cancel</button>
     </div>
 
-    <div class="worldmap" id="worldmap" role="application" aria-label="Interactive world map. Use the form below to add a country, or pan and tap the map to drop a pin."></div>
+    <div class="worldmap" id="worldmap" role="application" aria-label="Interactive world map. Use the form below to add a country, or pan and tap the map to drop a pin." style="height:clamp(380px,62vh,580px)"></div>
 
     <div id="toPinWrap" style="margin-top:14px;display:none">
       <p style="font-family:var(--mono);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;margin:0 0 8px;color:var(--ink-2)">From your interviews, still to pin</p>
@@ -235,7 +235,9 @@
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
   map.touchZoomRotate.disableRotation();
-  map.on("load", function (){ map.getCanvas().style.cursor = "crosshair"; render(); });
+  map.on("load", function (){ map.resize(); map.getCanvas().style.cursor = "crosshair"; render(); });
+  // container may settle its size after first paint (cached CSS, fonts, layout) → force a resize
+  window.addEventListener("load", function (){ setTimeout(function (){ try { map.resize(); } catch (e) {} }, 200); });
 
   function startPlacing(country, who){
     pending = { country: country, who: who || "" };
