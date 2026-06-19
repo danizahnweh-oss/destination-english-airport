@@ -511,6 +511,15 @@ footer.foot { text-align: center; color: var(--muted); font-size: 13px; margin-t
 .departures .dep:nth-child(4) { animation-delay: .22s; }
 .departures .dep:nth-child(5) { animation-delay: .28s; }
 
+/* ---------- Page transitions (fade between pages) ---------- */
+@keyframes pageEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+main.wrap { animation: pageEnter .4s var(--ease) both; }
+body.is-leaving main.wrap {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity .2s var(--ease), transform .2s var(--ease);
+}
+
 /* ---------- Touch press feedback + iPad sticky-hover guard ---------- */
 .dep { transition: background .2s var(--ease), transform .12s var(--ease); }
 .dep:active { transform: scale(.992); }

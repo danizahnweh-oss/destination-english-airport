@@ -360,6 +360,28 @@ window.App = (function () {
     });
   }
 
+  /* ---------- page transitions (fade out → navigate → fade in) ---------- */
+  function wirePageTransitions() {
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // restore the page if the browser shows it again from the back/forward cache
+    window.addEventListener("pageshow", (e) => { if (e.persisted) document.body.classList.remove("is-leaving"); });
+    if (reduce) return; // no fade: let the browser navigate instantly
+
+    document.addEventListener("click", (e) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = e.target.closest && e.target.closest("a[href]");
+      if (!a || (a.target && a.target !== "_self") || a.hasAttribute("download")) return;
+      const href = a.getAttribute("href");
+      if (!href || href[0] === "#" || /^(mailto:|tel:|javascript:)/i.test(href)) return;
+      const url = new URL(a.href, location.href);
+      if (url.origin !== location.origin) return;                 // external link
+      if (url.pathname === location.pathname) return;             // same page / anchor
+      e.preventDefault();
+      document.body.classList.add("is-leaving");
+      setTimeout(() => { location.href = a.href; }, 200);         // match the fade-out duration
+    });
+  }
+
   /* ---------- PDF ---------- */
   function exportPDF() { window.print(); }
 
@@ -386,6 +408,7 @@ window.App = (function () {
     wireModal();
     addPlanes();
     configWarn();
+    wirePageTransitions();
 
     // restore last active group
     const activeId = lsGet("active", null);
