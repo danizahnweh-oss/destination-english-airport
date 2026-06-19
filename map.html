@@ -148,30 +148,42 @@
   const MUC = [11.7861, 48.3538];     // Munich Airport [lng, lat]
   const ARC_COLOR = "#e09b2d";        // departures-board amber
 
-  // quadratic-bezier arc in lng/lat space, bowed sideways so the line looks like a flight path
-  function arcCoords(from, to, curvature, segments){
-    const x0 = from[0], y0 = from[1], x2 = to[0], y2 = to[1];
-    const dx = x2 - x0, dy = y2 - y0, dist = Math.hypot(dx, dy);
-    if (dist === 0) return [from, to];
-    const mx = (x0 + x2) / 2, my = (y0 + y2) / 2;     // midpoint
-    const nx = -dy / dist, ny = dx / dist;            // unit normal
-    const off = dist * curvature;                     // how far the arc bows
-    const cx = mx + nx * off, cy = my + ny * off;     // control point
-    const pts = [];
-    const seg = Math.max(2, segments);
+  // true great-circle path (slerp on the sphere) → the natural flight-path curve once projected
+  function greatCircle(from, to, segments){
+    const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+    const lon1 = from[0] * D2R, lat1 = from[1] * D2R, lon2 = to[0] * D2R, lat2 = to[1] * D2R;
+    const cosD = Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+    const delta = Math.acos(Math.min(1, Math.max(-1, cosD)));   // central angle
+    if (delta === 0) return [[from]];                            // same point
+    const seg = Math.max(2, segments), pts = [];
     for (let i = 0; i <= seg; i++){
-      const t = i / seg, inv = 1 - t;
-      pts.push([inv * inv * x0 + 2 * inv * t * cx + t * t * x2,
-                inv * inv * y0 + 2 * inv * t * cy + t * t * y2]);
+      const f = i / seg;
+      const A = Math.sin((1 - f) * delta) / Math.sin(delta);
+      const B = Math.sin(f * delta) / Math.sin(delta);
+      const x = A * Math.cos(lat1) * Math.cos(lon1) + B * Math.cos(lat2) * Math.cos(lon2);
+      const y = A * Math.cos(lat1) * Math.sin(lon1) + B * Math.cos(lat2) * Math.sin(lon2);
+      const z = A * Math.sin(lat1) + B * Math.sin(lat2);
+      pts.push([Math.atan2(y, x) * R2D, Math.atan2(z, Math.hypot(x, y)) * R2D]);
     }
-    return pts;
+    return splitDateline(pts);
+  }
+  // cut the path into separate segments wherever it crosses the antimeridian,
+  // so the line doesn't sweep horizontally across the whole map (renderWorldCopies is off)
+  function splitDateline(pts){
+    const segs = []; let cur = [pts[0]];
+    for (let i = 1; i < pts.length; i++){
+      if (Math.abs(pts[i][0] - pts[i - 1][0]) > 180){ segs.push(cur); cur = [pts[i]]; }
+      else cur.push(pts[i]);
+    }
+    segs.push(cur);
+    return segs;   // → MultiLineString coordinates
   }
   function arcsGeoJSON(){
     return {
       type: "FeatureCollection",
       features: pins().map(function (m){
         return { type: "Feature", properties: {},
-          geometry: { type: "LineString", coordinates: arcCoords([m.lng, m.lat], MUC, 0.25, 48) } };
+          geometry: { type: "MultiLineString", coordinates: greatCircle([m.lng, m.lat], MUC, 64) } };
       })
     };
   }
