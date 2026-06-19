@@ -71,6 +71,19 @@
       '<div class="iv">' +
         '<div class="iv-head"><span class="av">🧳</span><h3>Interview ' + i + "</h3></div>" +
         '<div class="iv-grid">' + fields +
+          '<div class="field full iv-photo">' +
+            '<label>Photo of the traveller (optional)</label>' +
+            '<div class="photo-row">' +
+              '<div class="photo-prev" id="ivPhoto' + i + '"><span class="photo-ph">No photo yet</span></div>' +
+              '<div class="photo-actions">' +
+                '<label class="btn btn-ghost photo-btn">Add / change photo' +
+                  '<input type="file" accept="image/*" data-photo="' + i + '" hidden>' +
+                "</label>" +
+                '<button type="button" class="btn btn-ghost photo-del" data-photodel="' + i + '" hidden>Remove</button>' +
+              "</div>" +
+            "</div>" +
+            '<p class="muted" style="margin:6px 0 0">Only add a photo if the traveller says yes. It stays inside your group.</p>' +
+          "</div>" +
           '<div class="field full"><label class="done-toggle" style="margin-top:0">' +
             '<input type="checkbox" data-key="iv' + i + '_marked"><span class="box"></span>' +
             '<span class="lbl">We marked this country on our world map</span></label></div>' +
@@ -79,11 +92,61 @@
   }
   document.getElementById("ivList").innerHTML = html;
 
+  // ---- photo handling: shrink to a small JPEG, store as data-URL in the group store ----
+  function storePhoto(file, key) {
+    if (!file || !/^image\//.test(file.type)) return;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = new Image();
+      img.onload = function () {
+        const max = 560;
+        let w = img.width, h = img.height;
+        if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
+        else if (h >= w && h > max) { w = Math.round(w * max / h); h = max; }
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        App.setVal(key, c.toDataURL("image/jpeg", 0.72));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById("ivList").addEventListener("change", function (e) {
+    const inp = e.target.closest("input[data-photo]");
+    if (inp && inp.files && inp.files[0]) {
+      storePhoto(inp.files[0], "iv" + inp.getAttribute("data-photo") + "_photo");
+      inp.value = ""; // allow re-picking the same file later
+    }
+  });
+  document.getElementById("ivList").addEventListener("click", function (e) {
+    const del = e.target.closest("[data-photodel]");
+    if (del) App.setVal("iv" + del.getAttribute("data-photodel") + "_photo", "");
+  });
+
+  function renderPhotos() {
+    for (let i = 1; i <= N; i++) {
+      const url = App.getVal("iv" + i + "_photo");
+      const prev = document.getElementById("ivPhoto" + i);
+      const delBtn = document.querySelector('[data-photodel="' + i + '"]');
+      if (!prev) continue;
+      if (url) {
+        prev.innerHTML = '<img src="' + url + '" alt="Photo of traveller ' + i + '">';
+        if (delBtn) delBtn.hidden = false;
+      } else {
+        prev.innerHTML = '<span class="photo-ph">No photo yet</span>';
+        if (delBtn) delBtn.hidden = true;
+      }
+    }
+  }
+
   function refresh() {
     let done = 0;
     for (let i = 1; i <= N; i++) if (App.getVal("iv" + i + "_name").trim()) done++;
     document.getElementById("ivCount").textContent = done;
     document.getElementById("ivBar").style.width = Math.round((done / N) * 100) + "%";
+    renderPhotos();
   }
   App.onData(refresh);
   App.init({ page: "interviews" });

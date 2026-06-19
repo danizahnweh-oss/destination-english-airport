@@ -88,7 +88,9 @@
       const rows = DATA.interviewFields.map(function (f) {
         return '<div style="margin:3px 0"><span class="muted">' + esc(f.label) + ":</span> " + answer("iv" + i + "_" + f.suffix) + "</div>";
       }).join("");
-      ivHtml += '<div class="r-item"><div class="q">Interview ' + i + "</div>" + rows + "</div>";
+      const photo = val("iv" + i + "_photo");
+      const photoHtml = photo ? '<img class="r-photo" src="' + photo + '" alt="Photo of traveller ' + i + '">' : "";
+      ivHtml += '<div class="r-item"><div class="q">Interview ' + i + "</div>" + photoHtml + rows + "</div>";
     }
     document.getElementById("rInterviews").innerHTML = ivHtml || '<p class="muted">No interviews recorded yet.</p>';
 

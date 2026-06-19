@@ -426,5 +426,5 @@ window.App = (function () {
     }
   }
 
-  return { init, onData, getVal, getAll, exportPDF, toast, openModal, hasGroup: () => !!group, group: () => (group ? { id: group.id, name: group.name } : null) };
+  return { init, onData, getVal, getAll, setVal, exportPDF, toast, openModal, hasGroup: () => !!group, group: () => (group ? { id: group.id, name: group.name } : null) };
 })();
