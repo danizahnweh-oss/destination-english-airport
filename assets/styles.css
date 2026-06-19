@@ -28,6 +28,7 @@
   --brand-shadow: oklch(0.55 0.17 256 / 0.35);
   --red: oklch(0.60 0.20 22);
   --red-bg: oklch(0.95 0.04 22);
+  --radius-lg: 22px;
   --radius: 18px;
   --radius-sm: 12px;
   --shadow: 0 14px 34px oklch(0.45 0.08 262 / 0.10);
@@ -52,6 +53,8 @@ body {
     var(--bg);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   min-height: 100dvh;
 }
 
@@ -117,7 +120,7 @@ a { color: var(--brand-dark); }
 /* ---------- Departure board hero ---------- */
 .board {
   background: linear-gradient(155deg, var(--board-2) 0%, var(--board) 100%);
-  color: #fff; border-radius: 24px; padding: clamp(26px, 4vw, 40px);
+  color: #fff; border-radius: var(--radius-lg); padding: clamp(26px, 4vw, 40px);
   box-shadow: var(--shadow); position: relative; overflow: hidden;
   margin-bottom: 20px;
 }
@@ -168,7 +171,8 @@ a { color: var(--brand-dark); }
 .flip { font-family: var(--mono); color: var(--amber); background: oklch(0.08 0.02 262);
   padding: 0 12px; border-radius: 8px; box-shadow: inset 0 0 0 1px oklch(0.82 0.15 78 / 0.3); letter-spacing: 2px; }
 
-.board .plane { position: absolute; right: -16px; top: -24px; font-size: 150px; opacity: .06; transform: rotate(18deg); }
+.board .plane { position: absolute; right: -16px; top: -24px; width: 150px; height: 150px; opacity: .06; transform: rotate(18deg); }
+.board .plane svg { width: 100%; height: 100%; display: block; fill: #fff; }
 .board .meta-row { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
 .board .meta-row span {
   background: oklch(1 0 0 / 0.07); border: 1px solid oklch(1 0 0 / 0.12);
@@ -380,7 +384,8 @@ select { -webkit-appearance: none; appearance: none; background-image: url("data
 .add-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
 .add-row .field { flex: 1; min-width: 140px; }
 .empty { text-align: center; color: var(--muted); padding: 30px 10px; }
-.empty .e-ico { font-size: 40px; opacity: .5; }
+.empty .e-ico { font-size: 40px; opacity: .5; display: inline-block; animation: emptyFloat 4s ease-in-out infinite; }
+@keyframes emptyFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
 /* ---------- Interactive world map (MapLibre · tap to pin) ---------- */
 .worldmap {
@@ -478,7 +483,7 @@ select { -webkit-appearance: none; appearance: none; background-image: url("data
 }
 .modal-back.show { display: flex; }
 .modal {
-  background: var(--card); border-radius: 22px; box-shadow: 0 30px 70px rgba(0,0,0,.4);
+  background: var(--card); border-radius: var(--radius-lg); box-shadow: 0 30px 70px rgba(0,0,0,.4);
   width: 100%; max-width: 440px; padding: 26px; max-height: 90vh; overflow: auto;
 }
 .modal h2 { margin: 0 0 4px; font-size: 22px; }
@@ -734,8 +739,17 @@ body::before {
   .brand span:not(.logo) { max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .timeline li { grid-template-columns: 84px 1fr; }
   .group-pill .gname { max-width: 90px; }
-  .dep, .dep-header { grid-template-columns: 1fr auto; }
-  .dep .route, .dep-header .col-route { display: none; }
+  /* keep the flight code (departures-board charm) as a small mono line above the name */
+  .dep {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "route status" "main status";
+    column-gap: 12px; row-gap: 2px;
+  }
+  .dep .route { grid-area: route; }
+  .dep .dep-main { grid-area: main; }
+  .dep .status { grid-area: status; align-self: center; }
+  .dep-header { grid-template-columns: 1fr auto; }
+  .dep-header .col-route { display: none; }
   .dep .dep-sub { font-size: 13px; }
 }
 
