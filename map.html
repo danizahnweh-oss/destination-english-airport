@@ -88,7 +88,7 @@
   /* ---- interview countries (for list + "still to pin" chips) ---- */
   function interviewCountries(){
     const out = [];
-    for (let i = 1; i <= DATA.interviewCount; i++){
+    for (let i = 1; i <= App.interviewTotal(); i++){
       const c = App.getVal("iv" + i + "_from").trim();
       if (c) out.push({ country: c, who: App.getVal("iv" + i + "_name").trim() });
     }

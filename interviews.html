@@ -32,6 +32,10 @@
 
   <div id="ivList"></div>
 
+  <div style="display:flex;justify-content:center;margin:4px 0 12px">
+    <button type="button" class="btn btn-ghost" id="addIv">＋ Add another interview</button>
+  </div>
+
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
     <a class="btn btn-primary" href="map.html">Next: World map →</a>
     <a class="btn btn-ghost" href="report.html">View team report</a>
@@ -52,20 +56,15 @@
   document.getElementById("qbank").innerHTML =
     DATA.interviewHelp.questions.map(function (q) { return '<span class="chip">' + q + "</span>"; }).join("");
 
-  // build 6 interview cards
-  const N = DATA.interviewCount;
-  document.getElementById("ivTotal").textContent = N;
-  let html = "";
-  for (let i = 1; i <= N; i++) {
+  // build interview cards (base count from DATA, group can add more)
+  let renderedN = 0;
+  function cardHTML(i) {
     const fields = DATA.interviewFields.map(function (f) {
       const key = "iv" + i + "_" + f.suffix;
       const cls = f.full ? "field full" : "field";
-      const input = f.full
-        ? '<input type="text" data-key="' + key + '" placeholder="' + f.placeholder + '">'
-        : '<input type="text" data-key="' + key + '" placeholder="' + f.placeholder + '">';
-      return '<div class="' + cls + '"><label>' + f.label + "</label>" + input + "</div>";
+      return '<div class="' + cls + '"><label>' + f.label + '</label><input type="text" data-key="' + key + '" placeholder="' + f.placeholder + '"></div>';
     }).join("");
-    html +=
+    return (
       '<div class="iv">' +
         '<div class="iv-head"><span class="av">🧳</span><h3>Interview ' + i + "</h3></div>" +
         '<div class="iv-grid">' + fields +
@@ -86,9 +85,31 @@
             '<input type="checkbox" data-key="iv' + i + '_marked"><span class="box"></span>' +
             '<span class="lbl">We marked this country on our world map</span></label></div>' +
         "</div>" +
-      "</div>";
+      "</div>"
+    );
   }
-  document.getElementById("ivList").innerHTML = html;
+  function buildList() {
+    const total = App.interviewTotal();
+    if (total === renderedN) return;
+    let html = "";
+    for (let i = 1; i <= total; i++) html += cardHTML(i);
+    document.getElementById("ivList").innerHTML = html;
+    renderedN = total;
+    App.bind();
+  }
+  buildList();
+
+  document.getElementById("addIv").addEventListener("click", function () {
+    App.setVal("_iv_count", String(App.interviewTotal() + 1));
+    buildList();
+    const cards = document.querySelectorAll("#ivList .iv");
+    const last = cards[cards.length - 1];
+    if (last) {
+      last.scrollIntoView({ behavior: "smooth", block: "start" });
+      const first = last.querySelector("input[data-key]");
+      if (first) first.focus({ preventScroll: true });
+    }
+  });
 
   // ---- photo handling: shrink to a small JPEG, store as data-URL in the group store ----
   function storePhoto(file, key) {
@@ -124,7 +145,7 @@
   });
 
   function renderPhotos() {
-    for (let i = 1; i <= N; i++) {
+    for (let i = 1; i <= renderedN; i++) {
       const url = App.getVal("iv" + i + "_photo");
       const prev = document.getElementById("ivPhoto" + i);
       const delBtn = document.querySelector('[data-photodel="' + i + '"]');
@@ -140,10 +161,12 @@
   }
 
   function refresh() {
+    buildList(); // rebuilds if another device added interviews
     let done = 0;
-    for (let i = 1; i <= N; i++) if (App.getVal("iv" + i + "_name").trim()) done++;
+    for (let i = 1; i <= renderedN; i++) if (App.getVal("iv" + i + "_name").trim()) done++;
+    document.getElementById("ivTotal").textContent = renderedN;
     document.getElementById("ivCount").textContent = done;
-    document.getElementById("ivBar").style.width = Math.round((done / N) * 100) + "%";
+    document.getElementById("ivBar").style.width = Math.round((done / renderedN) * 100) + "%";
     renderPhotos();
   }
   App.onData(refresh);

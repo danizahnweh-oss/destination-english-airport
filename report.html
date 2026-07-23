@@ -83,7 +83,7 @@
 
     // interviews
     let ivHtml = "";
-    for (let i = 1; i <= DATA.interviewCount; i++) {
+    for (let i = 1; i <= App.interviewTotal(); i++) {
       if (!val("iv" + i + "_name") && !val("iv" + i + "_from")) continue;
       const rows = DATA.interviewFields.map(function (f) {
         return '<div style="margin:3px 0"><span class="muted">' + esc(f.label) + ":</span> " + answer("iv" + i + "_" + f.suffix) + "</div>";
@@ -96,7 +96,7 @@
 
     // countries
     const set = {};
-    for (let i = 1; i <= DATA.interviewCount; i++) { const c = val("iv" + i + "_from"); if (c) set[c.toLowerCase()] = c; }
+    for (let i = 1; i <= App.interviewTotal(); i++) { const c = val("iv" + i + "_from"); if (c) set[c.toLowerCase()] = c; }
     try { JSON.parse(App.getVal("map_manual") || "[]").forEach(function (m) { if (m.country) set[m.country.toLowerCase()] = m.country; }); } catch (e) {}
     const keys = Object.keys(set);
     document.getElementById("rCountries").innerHTML = keys.length

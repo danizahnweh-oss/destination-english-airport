@@ -46,6 +46,12 @@ window.App = (function () {
 
   /* ---------- public store access ---------- */
   function getVal(key) { return store[key] || ""; }
+  // interviews: base count from DATA, groups can add more (shared via "_iv_count")
+  function interviewTotal() {
+    const base = (window.DATA && window.DATA.interviewCount) || 6;
+    const n = parseInt(store["_iv_count"], 10);
+    return Math.max(base, n || 0);
+  }
   function getAll() { return Object.assign({}, store); }
   function onData(cb) { dataCbs.push(cb); }
   function fireData() { dataCbs.forEach((cb) => { try { cb(); } catch (e) {} }); }
@@ -426,5 +432,5 @@ window.App = (function () {
     }
   }
 
-  return { init, onData, getVal, getAll, setVal, exportPDF, toast, openModal, hasGroup: () => !!group, group: () => (group ? { id: group.id, name: group.name } : null) };
+  return { init, onData, getVal, getAll, setVal, interviewTotal, bind: bindFields, exportPDF, toast, openModal, hasGroup: () => !!group, group: () => (group ? { id: group.id, name: group.name } : null) };
 })();
