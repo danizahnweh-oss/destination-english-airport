@@ -66,5 +66,42 @@ window.Sync = (function () {
       .subscribe((status) => { if (onStatus) onStatus(status); });
   }
 
-  return { ready, loadAll, upsert, subscribe };
+  // Dashboard: load every row of every group → { groupId: { fields, updated } }
+  async function loadEverything() {
+    const c = getClient();
+    if (!c) throw new Error("no-config");
+    const { data, error } = await c
+      .from("entries")
+      .select("group_id,field_key,value,updated_at");
+    if (error) throw error;
+    const map = {};
+    (data || []).forEach((r) => {
+      if (!map[r.group_id]) map[r.group_id] = { fields: {}, updated: 0 };
+      map[r.group_id].fields[r.field_key] = r.value;
+      const t = Date.parse(r.updated_at) || 0;
+      if (t > map[r.group_id].updated) map[r.group_id].updated = t;
+    });
+    return map;
+  }
+
+  // Dashboard realtime: every change of every group (no group filter)
+  let allChannel = null;
+  function subscribeAll(onChange, onStatus) {
+    const c = getClient();
+    if (!c) return;
+    if (allChannel) { c.removeChannel(allChannel); allChannel = null; }
+    allChannel = c
+      .channel("dashboard-all")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "entries" },
+        (payload) => {
+          const row = payload.new && payload.new.field_key ? payload.new : payload.old;
+          if (row) onChange(row.group_id, row.field_key, row.value, row.updated_at);
+        }
+      )
+      .subscribe((status) => { if (onStatus) onStatus(status); });
+  }
+
+  return { ready, loadAll, upsert, subscribe, loadEverything, subscribeAll };
 })();
