@@ -159,6 +159,7 @@ window.App = (function () {
   function navHTML() {
     const links = [
       ["index.html", "Home", "index"],
+      ["rules.html", "Rules", "rules"],
       ["missions.html", "Missions", "missions"],
       ["interviews.html", "Interviews", "interviews"],
       ["map.html", "World map", "map"],
@@ -409,6 +410,12 @@ window.App = (function () {
     opts = opts || {};
     page = opts.page || "index";
 
+    // first visit on this device → show the ground rules before anything else
+    if (page !== "rules" && !lsGet("rulesOk", false)) {
+      location.replace("rules.html");
+      return;
+    }
+
     const navHost = document.getElementById("topnav");
     if (navHost) { navHost.className = "nav"; navHost.innerHTML = navHTML(); }
     wireModal();
@@ -432,5 +439,7 @@ window.App = (function () {
     }
   }
 
-  return { init, onData, getVal, getAll, setVal, interviewTotal, bind: bindFields, exportPDF, toast, openModal, hasGroup: () => !!group, group: () => (group ? { id: group.id, name: group.name } : null) };
+  function acceptRules() { lsSet("rulesOk", true); }
+
+  return { init, onData, getVal, getAll, setVal, interviewTotal, bind: bindFields, exportPDF, toast, openModal, acceptRules, hasGroup: () => !!group, group: () => (group ? { id: group.id, name: group.name } : null) };
 })();

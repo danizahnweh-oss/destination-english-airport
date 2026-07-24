@@ -26,7 +26,11 @@ window.DATA = {
   ],
 
   rules: [
+    "Be friendly and smile — you represent your class.",
     "Be polite: start with “Excuse me, do you have a minute?” and accept a “no”.",
+    "Never pressure anyone. If someone says no or looks busy, thank them and move on.",
+    "If you feel uncomfortable, leave the situation — you never need a reason.",
+    "If a situation gets difficult or unpleasant, tell a teacher right away. <b>Teachers are at the Airbräu.</b>",
     "Never photograph a person who doesn't want it. Photos only of signs and places.",
     "Stay together, keep to the meeting point and the time.",
     "Don't enter restricted areas and don't stand in anyone's way."

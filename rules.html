@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ground Rules · Destination English</title>
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<header id="topnav"></header>
+
+<main class="wrap">
+
+  <section class="board reveal">
+    <span class="plane" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2 1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></span>
+    <span class="eyebrow"><span aria-hidden="true">✈</span> Before you start</span>
+    <h1>Ground Rules</h1>
+    <p class="lead">Read these rules together as a group before you talk to anyone. They keep you and the travellers safe and comfortable.</p>
+  </section>
+
+  <h2 class="section-title">How we behave today</h2>
+  <section class="card reveal reveal-1">
+    <ul class="bullets warn" id="rulesList"></ul>
+    <div class="callout">
+      <span class="c-ico">🧑‍🏫</span>
+      <div><b>Teachers are at the Airbräu.</b> If anything feels difficult or unpleasant, come and find us any time — you will never be in trouble for asking for help.</div>
+    </div>
+  </section>
+
+  <section class="card reveal reveal-2" style="text-align:center">
+    <p class="sec-sub" style="margin-top:0">Talked about the rules with your group?</p>
+    <button class="btn btn-primary btn-lg" id="acceptBtn" type="button">All clear — let's go! →</button>
+  </section>
+
+  <footer class="foot">Made for the Class 8 airport project day · “Destination English”.</footer>
+</main>
+
+<script src="assets/config.js"></script>
+<script src="assets/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/sync.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  document.getElementById("rulesList").innerHTML =
+    DATA.rules.map((r) => '<li><span class="b-ico">!</span><span>' + r + "</span></li>").join("");
+
+  App.init({ page: "rules" });
+
+  document.getElementById("acceptBtn").addEventListener("click", () => {
+    App.acceptRules();
+    document.body.classList.add("is-leaving");
+    setTimeout(() => { window.location.href = "index.html"; }, 200);
+  });
+</script>
+</body>
+</html>
