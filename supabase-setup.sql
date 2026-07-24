@@ -21,6 +21,7 @@ alter table public.entries enable row level security;
 drop policy if exists "anon read entries"   on public.entries;
 drop policy if exists "anon insert entries" on public.entries;
 drop policy if exists "anon update entries" on public.entries;
+drop policy if exists "anon delete entries" on public.entries;
 
 create policy "anon read entries"
   on public.entries for select
@@ -36,6 +37,12 @@ create policy "anon update entries"
   on public.entries for update
   to anon, authenticated
   using (true) with check (true);
+
+-- delete is used by the teacher dashboard to remove a whole group
+create policy "anon delete entries"
+  on public.entries for delete
+  to anon, authenticated
+  using (true);
 
 -- 3) Broadcast row changes over Realtime so all devices update live.
 --    (Safe to re-run: only adds the table if it isn't already published.)

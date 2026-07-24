@@ -147,6 +147,7 @@
           '<span class="dc-dot" style="background:' + colorFor(id) + '"></span>' +
           '<span class="dc-name">' + esc(groupName(id)) + ' <span class="dc-code">· ' + id + "</span></span>" +
           '<span class="dc-pts">' + s.pts + " pts</span>" +
+          '<button class="dc-del" type="button" data-del="' + id + '" title="Delete this group" aria-label="Delete group ' + esc(groupName(id)) + '">✕</button>' +
         "</div>" +
         bar("Missions", s.done, s.total) +
         bar("Interviews", s.ivDone, s.ivTotal) +
@@ -156,7 +157,32 @@
       "</div>";
     }).join("");
 
+    grid.querySelectorAll(".dc-del").forEach(btn => {
+      btn.addEventListener("click", () => deleteGroup(btn.getAttribute("data-del")));
+    });
+
     renderPins(active, stats);
+  }
+
+  /* ============================ delete a group ============================ */
+  async function deleteGroup(id){
+    const name = groupName(id);
+    if (!confirm('Delete group “' + name + '” (' + id + ') and ALL of its answers?\nThis cannot be undone.')) return;
+    try {
+      if (cloud) await window.Sync.deleteGroup(id);
+      const P = (window.CONFIG && window.CONFIG.STORAGE_PREFIX) || "destEN_";
+      localStorage.removeItem(P + "data_" + id);
+      try {
+        const known = (JSON.parse(localStorage.getItem(P + "groups")) || []).filter(g => g.id !== id);
+        localStorage.setItem(P + "groups", JSON.stringify(known));
+      } catch (e) {}
+      delete groups[id];
+      render();
+      App.toast && App.toast("Group " + name + " deleted");
+    } catch (e) {
+      alert("Could not delete the group.\n\nMost likely the database is missing the delete permission — " +
+        "run the updated supabase-setup.sql once in the Supabase SQL editor.\n\n(" + (e.message || e) + ")");
+    }
   }
 
   /* ============================ class map ============================ */

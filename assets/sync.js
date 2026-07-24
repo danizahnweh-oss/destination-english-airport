@@ -84,6 +84,15 @@ window.Sync = (function () {
     return map;
   }
 
+  // Dashboard: delete every row of one group (needs the delete policy,
+  // see supabase-setup.sql)
+  async function deleteGroup(groupId) {
+    const c = getClient();
+    if (!c) throw new Error("no-config");
+    const { error } = await c.from("entries").delete().eq("group_id", groupId);
+    if (error) throw error;
+  }
+
   // Dashboard realtime: every change of every group (no group filter)
   let allChannel = null;
   function subscribeAll(onChange, onStatus) {
@@ -103,5 +112,5 @@ window.Sync = (function () {
       .subscribe((status) => { if (onStatus) onStatus(status); });
   }
 
-  return { ready, loadAll, upsert, subscribe, loadEverything, subscribeAll };
+  return { ready, loadAll, upsert, subscribe, loadEverything, subscribeAll, deleteGroup };
 })();
