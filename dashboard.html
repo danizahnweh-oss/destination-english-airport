@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Teacher Dashboard · Destination English</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css" />
-<link rel="stylesheet" href="assets/styles.css?v=5" />
+<link rel="stylesheet" href="assets/styles.css?v=6" />
 </head>
 <body>
 <header id="topnav"></header>
@@ -43,12 +43,21 @@
   <footer class="foot">Teacher dashboard · updates itself while the groups work.</footer>
 </main>
 
+<!-- interview answers pop-up -->
+<div class="modal-back" id="ivBack">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ivTitle" style="max-width:640px">
+    <h2 id="ivTitle">Interviews</h2>
+    <div id="ivBody" style="max-height:62vh;overflow-y:auto;overscroll-behavior:contain"></div>
+    <button class="btn btn-ghost btn-block" id="ivClose" type="button" style="margin-top:16px">Close</button>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
-<script src="assets/config.js?v=5"></script>
-<script src="assets/data.js?v=5"></script>
+<script src="assets/config.js?v=6"></script>
+<script src="assets/data.js?v=6"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/sync.js?v=5"></script>
-<script src="assets/app.js?v=5"></script>
+<script src="assets/sync.js?v=6"></script>
+<script src="assets/app.js?v=6"></script>
 <script>
   function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
   function flagFor(n){ return (DATA.flags[String(n).trim().toLowerCase()]) || "🌍"; }
@@ -167,15 +176,69 @@
         (flags ? '<div class="dc-flags">' + flags + "</div>" : "") +
         '<div class="dc-time">' + (s.km ? "✈ " + fmtKm(s.km) + " to Munich · " : "") +
           "Last activity: " + (timeAgo(groups[id].updated) || "—") + "</div>" +
+        (s.ivDone ? '<button class="btn btn-ghost dc-iv" type="button" data-iv="' + id + '">🎤 View interviews (' + s.ivDone + ")</button>" : "") +
       "</div>";
     }).join("");
 
     grid.querySelectorAll(".dc-del").forEach(btn => {
       btn.addEventListener("click", () => deleteGroup(btn.getAttribute("data-del")));
     });
+    grid.querySelectorAll(".dc-iv").forEach(btn => {
+      btn.addEventListener("click", () => openInterviews(btn.getAttribute("data-iv")));
+    });
+
+    // keep an open interview pop-up in sync with live data
+    if (ivOpenId){
+      if (groups[ivOpenId]) openInterviews(ivOpenId);
+      else closeInterviews();
+    }
 
     renderPins(active, stats);
   }
+
+  /* ============================ interview pop-up ============================ */
+  let ivOpenId = null;
+
+  function interviewHTML(id){
+    const fields = groups[id].fields;
+    const val = k => (fields[k] || "").trim();
+    const total = Math.max(DATA.interviewCount, parseInt(fields["_iv_count"], 10) || 0);
+    let html = "";
+    for (let i = 1; i <= total; i++){
+      if (!val("iv" + i + "_name") && !val("iv" + i + "_from")) continue;
+      const from = val("iv" + i + "_from");
+      const rows = DATA.interviewFields.map(f => {
+        const v = val("iv" + i + "_" + f.suffix);
+        return '<div style="margin:3px 0"><span class="muted">' + esc(f.label) + ":</span> " +
+          (v ? '<span class="a">' + esc(v) + "</span>" : '<span class="a blank">not answered</span>') + "</div>";
+      }).join("");
+      const photo = val("iv" + i + "_photo");
+      html += '<div class="r-item"><div class="q">Interview ' + i +
+        (from ? " · " + flagFor(from) + " " + esc(from) : "") + "</div>" +
+        (photo ? '<img class="r-photo" src="' + esc(photo) + '" alt="Photo of traveller ' + i + '">' : "") +
+        rows + "</div>";
+    }
+    return html || '<p class="muted">No interviews recorded yet.</p>';
+  }
+
+  function openInterviews(id){
+    if (!groups[id]) return;
+    ivOpenId = id;
+    document.getElementById("ivTitle").textContent = "🎤 " + groupName(id) + " · Interviews";
+    document.getElementById("ivBody").innerHTML = interviewHTML(id);
+    document.getElementById("ivBack").classList.add("show");
+  }
+  function closeInterviews(){
+    ivOpenId = null;
+    document.getElementById("ivBack").classList.remove("show");
+  }
+  document.getElementById("ivClose").addEventListener("click", closeInterviews);
+  document.getElementById("ivBack").addEventListener("click", function (e){
+    if (e.target === this) closeInterviews();
+  });
+  document.addEventListener("keydown", function (e){
+    if (e.key === "Escape" && ivOpenId) closeInterviews();
+  });
 
   /* ============================ delete a group ============================ */
   async function deleteGroup(id){

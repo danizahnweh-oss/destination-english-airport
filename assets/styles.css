@@ -806,3 +806,4 @@ body::before {
 .dash-card .dc-del { flex: none; width: 32px; height: 32px; border: none; border-radius: 9px; background: transparent; color: var(--muted); font-size: 15px; font-weight: 700; cursor: pointer; display: grid; place-items: center; transition: background .15s, color .15s; }
 .dash-card .dc-del:hover { background: var(--red-bg); color: var(--red); }
 .dash-card .dc-del:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+.dash-card .dc-iv { margin-top: 12px; width: 100%; min-height: 42px; font-size: 13.5px; }
