@@ -163,8 +163,7 @@ window.App = (function () {
       ["missions.html", "Missions", "missions"],
       ["interviews.html", "Interviews", "interviews"],
       ["map.html", "World map", "map"],
-      ["report.html", "Report", "report"],
-      ["dashboard.html", "Dashboard", "dashboard"]
+      ["report.html", "Report", "report"]
     ];
     return (
       '<div class="nav-inner">' +
