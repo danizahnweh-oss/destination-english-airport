@@ -85,12 +85,21 @@ window.Sync = (function () {
   }
 
   // Dashboard: delete every row of one group (needs the delete policy,
-  // see supabase-setup.sql)
+  // see supabase-setup.sql). Without that policy Postgres reports success
+  // but deletes nothing — so ask for the deleted rows and verify.
   async function deleteGroup(groupId) {
     const c = getClient();
     if (!c) throw new Error("no-config");
-    const { error } = await c.from("entries").delete().eq("group_id", groupId);
+    const { data, error } = await c
+      .from("entries")
+      .delete()
+      .eq("group_id", groupId)
+      .select("field_key");
     if (error) throw error;
+    if (!data || !data.length) {
+      throw new Error("The database refused the delete (0 rows removed). " +
+        "Run the delete policy from supabase-setup.sql once in the Supabase SQL editor.");
+    }
   }
 
   // Dashboard realtime: every change of every group (no group filter)
