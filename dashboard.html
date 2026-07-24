@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Teacher Dashboard · Destination English</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css" />
-<link rel="stylesheet" href="assets/styles.css?v=4" />
+<link rel="stylesheet" href="assets/styles.css?v=5" />
 </head>
 <body>
 <header id="topnav"></header>
@@ -44,11 +44,11 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
-<script src="assets/config.js?v=4"></script>
-<script src="assets/data.js?v=4"></script>
+<script src="assets/config.js?v=5"></script>
+<script src="assets/data.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/sync.js?v=4"></script>
-<script src="assets/app.js?v=4"></script>
+<script src="assets/sync.js?v=5"></script>
+<script src="assets/app.js?v=5"></script>
 <script>
   function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
   function flagFor(n){ return (DATA.flags[String(n).trim().toLowerCase()]) || "🌍"; }
@@ -78,15 +78,26 @@
       if (c) countries[c.toLowerCase()] = c;
     }
     const pins = [];
+    let km = 0;
     try {
       JSON.parse(fields["map_manual"] || "[]").forEach(m => {
         const label = m.country || m.city;
         if (label) countries[label.toLowerCase()] = label;
-        if (typeof m.lng === "number" && typeof m.lat === "number") pins.push(m);
+        if (typeof m.lng === "number" && typeof m.lat === "number"){ pins.push(m); km += kmToMUC(m.lng, m.lat); }
       });
     } catch (e) {}
-    return { done, total: DATA.missions.length, pts, ivDone, ivTotal, countries, pins };
+    return { done, total: DATA.missions.length, pts, ivDone, ivTotal, countries, pins, km: Math.round(km) };
   }
+
+  // great-circle distance (haversine) from a pin to Munich Airport, in km
+  function kmToMUC(lng, lat){
+    const D2R = Math.PI / 180, R = 6371;
+    const dLat = (lat - MUC[1]) * D2R, dLng = (lng - MUC[0]) * D2R;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat * D2R) * Math.cos(MUC[1] * D2R) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  function fmtKm(km){ return km.toLocaleString("en-GB") + " km"; }
 
   function groupName(id){
     return (groups[id].fields["_group_name"] || "").trim() || "Team " + id.slice(4);
@@ -122,10 +133,10 @@
 
     // class totals
     const classCountries = {};
-    let pts = 0, done = 0, iv = 0;
+    let pts = 0, done = 0, iv = 0, km = 0;
     active.forEach(id => {
       const s = stats[id];
-      pts += s.pts; done += s.done; iv += s.ivDone;
+      pts += s.pts; done += s.done; iv += s.ivDone; km += s.km;
       Object.keys(s.countries).forEach(k => (classCountries[k] = s.countries[k]));
     });
     document.getElementById("classStats").innerHTML =
@@ -133,7 +144,8 @@
       '<div class="dash-stat"><div class="big">' + pts + '</div><div class="cap">points</div></div>' +
       '<div class="dash-stat"><div class="big">' + done + '</div><div class="cap">missions done</div></div>' +
       '<div class="dash-stat"><div class="big">' + iv + '</div><div class="cap">interviews</div></div>' +
-      '<div class="dash-stat"><div class="big">' + Object.keys(classCountries).length + '</div><div class="cap">countries</div></div>';
+      '<div class="dash-stat"><div class="big">' + Object.keys(classCountries).length + '</div><div class="cap">countries</div></div>' +
+      '<div class="dash-stat"><div class="big">' + km.toLocaleString("en-GB") + '</div><div class="cap">km to Munich</div></div>';
 
     // group cards
     const grid = document.getElementById("groupGrid");
@@ -153,7 +165,8 @@
         bar("Interviews", s.ivDone, s.ivTotal) +
         bar("Pinned", s.pins.length, Math.max(s.pins.length, Object.keys(s.countries).length)) +
         (flags ? '<div class="dc-flags">' + flags + "</div>" : "") +
-        '<div class="dc-time">Last activity: ' + (timeAgo(groups[id].updated) || "—") + "</div>" +
+        '<div class="dc-time">' + (s.km ? "✈ " + fmtKm(s.km) + " to Munich · " : "") +
+          "Last activity: " + (timeAgo(groups[id].updated) || "—") + "</div>" +
       "</div>";
     }).join("");
 
