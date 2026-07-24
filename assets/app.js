@@ -315,6 +315,34 @@ window.App = (function () {
     document.getElementById("groupPill").addEventListener("click", openModal);
   }
 
+  /* ---------- rules gate (first visit on this device) ---------- */
+  function rulesGateHTML() {
+    const items = ((window.DATA && window.DATA.rules) || [])
+      .map((r) => '<li><span class="b-ico">!</span><span>' + r + "</span></li>").join("");
+    return (
+      '<div class="modal-back" id="rulesBack"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" style="max-width:540px">' +
+        '<h2 id="rulesTitle"><span aria-hidden="true">✈</span> Ground Rules</h2>' +
+        '<p class="sub">Read these together as a group before you talk to anyone.</p>' +
+        '<ul class="bullets warn" style="margin:0">' + items + "</ul>" +
+        '<div class="callout"><span class="c-ico">🧑‍🏫</span><div><b>Teachers are at the Airbräu.</b> If anything feels difficult or unpleasant, come and find us any time.</div></div>' +
+        '<button class="btn btn-primary btn-block" id="rulesOkBtn" style="margin-top:18px">All clear — let’s go! →</button>' +
+      "</div></div>"
+    );
+  }
+  function openRulesGate() {
+    document.body.insertAdjacentHTML("beforeend", rulesGateHTML());
+    const back = document.getElementById("rulesBack");
+    back.classList.add("show");
+    const btn = document.getElementById("rulesOkBtn");
+    setTimeout(() => btn.focus(), 30);
+    btn.addEventListener("click", () => {
+      acceptRules();
+      back.remove();
+      // now run the usual nudge: student pages still need a group
+      if (!group && ["missions", "interviews", "map", "report"].indexOf(page) >= 0) setTimeout(openModal, 300);
+    });
+  }
+
   /* ---------- toast ---------- */
   let toastTimer = null;
   function toast(msg) {
@@ -410,11 +438,7 @@ window.App = (function () {
     opts = opts || {};
     page = opts.page || "index";
 
-    // first visit on this device → show the ground rules before anything else
-    if (page !== "rules" && !lsGet("rulesOk", false)) {
-      location.replace("rules.html");
-      return;
-    }
+    const rulesOk = lsGet("rulesOk", false) || page === "rules";
 
     const navHost = document.getElementById("topnav");
     if (navHost) { navHost.className = "nav"; navHost.innerHTML = navHTML(); }
@@ -432,11 +456,14 @@ window.App = (function () {
     } else {
       paintGroupPill();
       bindFields(); // bind anyway so the page is interactive
-      // student pages need a group → nudge the user
-      if (["missions", "interviews", "map", "report"].indexOf(page) >= 0) {
+      // student pages need a group → nudge the user (after the rules gate, if shown)
+      if (rulesOk && ["missions", "interviews", "map", "report"].indexOf(page) >= 0) {
         setTimeout(openModal, 350);
       }
     }
+
+    // first visit on this device → rules pop-up on top of the page
+    if (!rulesOk) openRulesGate();
   }
 
   function acceptRules() { lsSet("rulesOk", true); }
